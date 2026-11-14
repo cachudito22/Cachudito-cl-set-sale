@@ -1,7 +1,6 @@
 {
-  "ejemplo": true,
   "version": 1,
-  "actualizado": "2026-11-14T20:30:00Z",
+  "actualizado": "2026-11-14T21:49:02Z",
   "tienda": {
     "nombre": "Mi tienda de segunda mano",
     "descripcion": "Ropa de segunda mano en excelente estado",
@@ -22,58 +21,88 @@
   ],
   "productos": [
     {
-      "id": "p_ejemplo1",
-      "nombre": "Polera básica blanca",
-      "categoria": "Camisetas",
-      "marca": "Zara",
-      "talla": "M",
-      "precio": 5990,
-      "precioAnterior": 7990,
+      "id": "p_dc09092e0e44",
+      "nombre": "Blusa azul Sonoma",
+      "categoria": "Tops",
+      "marca": "Sonoma",
+      "talla": "",
+      "precio": null,
+      "precioAnterior": null,
       "condicion": "Muy bueno",
       "estado": "disponible",
-      "descripcion": "Algodón 100%, sin manchas ni desgaste.",
-      "fotos": [],
-      "creado": "2026-11-14T20:30:00Z",
-      "color": "Blanco",
-      "genero": "Mujer",
-      "destacado": true,
-      "actualizado": "2026-11-14T20:30:00Z"
-    },
-    {
-      "id": "p_ejemplo2",
-      "nombre": "Jeans mom fit celeste",
-      "categoria": "Pantalones",
-      "marca": "Levi's",
-      "talla": "28",
-      "precio": 14990,
-      "precioAnterior": null,
-      "condicion": "Con detalles",
-      "estado": "disponible",
-      "descripcion": "Tiro alto. Pequeño detalle en el bolsillo trasero.",
-      "fotos": [],
-      "creado": "2026-11-14T20:31:00Z",
-      "color": "Celeste",
-      "genero": "Mujer",
-      "destacado": false,
-      "actualizado": "2026-11-14T20:31:00Z"
-    },
-    {
-      "id": "p_ejemplo3",
-      "nombre": "Chaqueta de mezclilla",
-      "categoria": "Chaquetas",
-      "marca": "H&M",
-      "talla": "L",
-      "precio": 19990,
-      "precioAnterior": null,
-      "condicion": "Como nuevo",
-      "estado": "vendido",
       "descripcion": "",
-      "fotos": [],
-      "creado": "2026-11-14T20:32:00Z",
+      "fotos": [
+        "imagenes/p_dc09092e0e44-1.jpg",
+        "imagenes/p_dc09092e0e44-2.jpg"
+      ],
+      "creado": "2026-11-14T21:49:02Z",
       "color": "Azul",
-      "genero": "Hombre",
+      "genero": "",
       "destacado": false,
-      "actualizado": "2026-11-14T20:32:00Z"
+      "actualizado": "2026-11-14T21:49:02Z"
+    },
+    {
+      "id": "p_dc090993fynq",
+      "nombre": "Polera manga corta Adidas azul",
+      "categoria": "Camisetas",
+      "marca": "Adidas",
+      "talla": "",
+      "precio": null,
+      "precioAnterior": null,
+      "condicion": "Muy bueno",
+      "estado": "disponible",
+      "descripcion": "",
+      "fotos": [
+        "imagenes/p_dc090993fynq-1.jpg",
+        "imagenes/p_dc090993fynq-2.jpg"
+      ],
+      "creado": "2026-11-14T21:49:02Z",
+      "color": "Azul",
+      "genero": "",
+      "destacado": false,
+      "actualizado": "2026-11-14T21:49:02Z"
+    },
+    {
+      "id": "p_dc0909bf4ltu",
+      "nombre": "Sudadera sol rosa",
+      "categoria": "Polerones",
+      "marca": "",
+      "talla": "",
+      "precio": null,
+      "precioAnterior": null,
+      "condicion": "Muy bueno",
+      "estado": "disponible",
+      "descripcion": "",
+      "fotos": [
+        "imagenes/p_dc0909bf4ltu-1.jpg",
+        "imagenes/p_dc0909bf4ltu-2.jpg"
+      ],
+      "creado": "2026-11-14T21:49:02Z",
+      "color": "Rosa",
+      "genero": "",
+      "destacado": false,
+      "actualizado": "2026-11-14T21:49:02Z"
+    },
+    {
+      "id": "p_dc0909e96glg",
+      "nombre": "Top amarillo Ellese",
+      "categoria": "Tops",
+      "marca": "Ellese",
+      "talla": "",
+      "precio": null,
+      "precioAnterior": null,
+      "condicion": "Muy bueno",
+      "estado": "disponible",
+      "descripcion": "",
+      "fotos": [
+        "imagenes/p_dc0909e96glg-1.jpg",
+        "imagenes/p_dc0909e96glg-2.jpg"
+      ],
+      "creado": "2026-11-14T21:49:02Z",
+      "color": "Amarillo",
+      "genero": "",
+      "destacado": false,
+      "actualizado": "2026-11-14T21:49:02Z"
     }
   ]
 }

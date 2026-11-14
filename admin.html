@@ -114,6 +114,13 @@ textarea.field{min-height:80px;resize:vertical}
 .chip{display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border-radius:999px;padding:4px 6px 4px 10px;font-size:13px}
 .chip button{border:0;background:transparent;cursor:pointer;color:var(--muted);font-size:15px;line-height:1;padding:0 4px}
 .progress{font-size:14px;color:var(--muted)}
+.grupo{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;border:1px solid var(--line);border-radius:10px;padding:10px}
+.grupo .mini{display:flex;gap:4px}
+.grupo .mini img{width:52px;height:64px;object-fit:cover;border-radius:6px;background:var(--surface-2)}
+.grupo .campos{display:grid;gap:6px;min-width:0}
+.grupo .campos .linea{display:flex;gap:6px}
+.grupo .campos .linea input{min-width:0}
+@media (max-width:600px){.grupo{grid-template-columns:1fr}}
 .lbl-sec{font-size:13px;color:var(--muted);font-weight:600;margin-bottom:6px}
 details.mas{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
 details.mas summary{cursor:pointer;font-weight:600;font-size:14px}
@@ -137,6 +144,9 @@ details.mas summary{cursor:pointer;font-weight:600;font-size:14px}
 
   <div class="toolbar">
     <button class="btn primary" id="btnNuevo">＋ Nuevo producto</button>
+    <button class="btn" id="btnMasiva" title="Sube muchas fotos a la vez: se agrupan por nombre de archivo o carpeta">📷 Carga masiva</button>
+    <input type="file" id="inputMasiva" accept="image/*" multiple class="hidden">
+    <input type="file" id="inputCarpeta" webkitdirectory multiple class="hidden">
     <input type="search" id="q" placeholder="Buscar por nombre, marca, talla…" aria-label="Buscar">
     <select id="fEstado" aria-label="Filtrar por estado">
       <option value="">Todos los estados</option>
@@ -174,8 +184,8 @@ details.mas summary{cursor:pointer;font-weight:600;font-size:14px}
         <input class="field" name="nombre" required maxlength="120" placeholder="Tipo + Marca + Color + Talla · Ej: Polera Zara blanca talla M" autocomplete="off">
         <span class="hint" id="detectado"></span>
       </label>
-      <label class="f">3. Precio
-        <input class="field" name="precio" type="number" inputmode="numeric" min="0" step="1" required placeholder="Ej: 5990">
+      <label class="f">3. Precio <span class="hint">(si lo dejas vacío, el catálogo muestra "Consultar")</span>
+        <input class="field" name="precio" type="number" inputmode="numeric" min="0" step="1" placeholder="Ej: 5990">
       </label>
       <label class="f"><span style="display:flex;align-items:center;justify-content:space-between;gap:8px">4. Descripción <button type="button" class="btn ghost sm" id="btnPlantilla">Usar plantilla</button></span>
         <textarea class="field" name="descripcion" maxlength="1500" rows="5" placeholder="Medidas, material, detalles…"></textarea>
@@ -242,6 +252,24 @@ details.mas summary{cursor:pointer;font-weight:600;font-size:14px}
       <button type="submit" class="btn primary">Guardar</button>
     </div>
   </form>
+</dialog>
+
+<!-- Carga masiva -->
+<dialog id="dlgMasiva">
+  <div class="dlg-head"><h2>Carga masiva</h2><button type="button" class="btn ghost sm" data-close>✕</button></div>
+  <div class="dlg-body">
+    <p class="hint" style="margin:0;font-size:13px">Cada grupo es un producto. Las fotos se agrupan por <b>nombre de archivo</b> (ej. <code>Polera Adidas azul 1.jpg</code>, <code>Polera Adidas azul 2.jpg</code>) o por <b>carpeta</b>. El número final define el orden: la 1 es la portada.</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button type="button" class="btn sm" id="btnMasivaFotos">Elegir fotos</button>
+      <button type="button" class="btn sm" id="btnMasivaCarpeta">Elegir una carpeta</button>
+    </div>
+    <div id="masivaLista" style="display:grid;gap:10px"></div>
+  </div>
+  <div class="dlg-foot">
+    <span class="progress" id="masivaInfo" style="flex:1;align-self:center"></span>
+    <button type="button" class="btn" data-close>Cancelar</button>
+    <button type="button" class="btn primary" id="btnMasivaCrear">Crear productos</button>
+  </div>
 </dialog>
 
 <!-- Ajustes -->
@@ -402,7 +430,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt
 const nuevoId = () => "p_" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
 function precioFmt(n){
   const m = S.datos.tienda.moneda || "CLP";
-  if(n == null || n === "" || isNaN(n)) return "—";
+  if(n == null || n === "" || isNaN(n)) return "Sin precio";
   try{ return new Intl.NumberFormat("es-CL",{style:"currency",currency:m,maximumFractionDigits:m==="CLP"?0:2}).format(n); }
   catch{ return "$" + Number(n).toLocaleString("es-CL"); }
 }
@@ -445,7 +473,7 @@ function normalizar(d){
     categorias: Array.isArray(d.categorias) && d.categorias.length ? d.categorias.map(c => typeof c === "string" ? c : (c && (c.nombre||c.id)) || "").filter(Boolean) : base.categorias,
     productos: Array.isArray(d.productos) ? d.productos.map(p => ({
       id: p.id || nuevoId(), nombre: p.nombre || p.titulo || "", categoria: p.categoria || "", marca: p.marca || "",
-      talla: p.talla || "", precio: Number(p.precio)||0,
+      talla: p.talla || "", precio: p.precio == null || p.precio === "" ? null : (Number(p.precio)||0),
       precioAnterior: p.precioAnterior == null || p.precioAnterior === "" ? null : Number(p.precioAnterior),
       condicion: p.condicion || "Muy bueno", estado: ESTADOS.includes(p.estado) ? p.estado : "disponible",
       descripcion: p.descripcion || "", fotos: Array.isArray(p.fotos) ? p.fotos : [],
@@ -674,7 +702,7 @@ function render(){
     return `<article class="card ${p.estado}" data-id="${esc(p.id)}">
       <div class="thumb" data-act="editar">
         ${foto ? `<img loading="lazy" src="${esc(urlFoto(foto))}" alt="">` : `<div class="nofoto">Sin foto</div>`}
-        <div class="badges">${p.destacado?'<span class="tag star">★ Destacado</span>':""}${mod && S.publicado?'<span class="tag cambio">Sin publicar</span>':""}${p.fotos.length>1?`<span class="tag">${p.fotos.length} fotos</span>`:""}</div>
+        <div class="badges">${p.destacado?'<span class="tag star">★ Destacado</span>':""}${mod && S.publicado?'<span class="tag cambio">Sin publicar</span>':""}${p.precio==null?'<span class="tag cambio">Falta precio</span>':""}${p.fotos.length>1?`<span class="tag">${p.fotos.length} fotos</span>`:""}</div>
       </div>
       <div class="body">
         <div class="name">${esc(p.nombre) || "<i>Sin nombre</i>"}</div>
@@ -733,7 +761,7 @@ const TIPOS = [
 const MARCAS_CONOCIDAS = ["Zara","H&M","Mango","Forever 21","Nike","Adidas","Puma","Reebok","Fila","New Balance","Under Armour","Converse","Vans","Skechers",
   "Levi's","Tommy Hilfiger","Calvin Klein","Ralph Lauren","Lacoste","Guess","Gap","Old Navy","Uniqlo","Shein","Pull&Bear","Bershka","Stradivarius",
   "Massimo Dutti","Topshop","Abercrombie","Hollister","American Eagle","Columbia","The North Face","Patagonia","Desigual","Benetton","Esprit",
-  "Sybilla","Basement","Americanino","Mossimo","Index","Marquis","Foster","Tricot","Corona","Wados","Ellus","Doite","Lippi","Rip Curl","Quiksilver","Billabong","Roxy","Dr. Martens","Timberland","Michael Kors","Carolina Herrera","Desigual"];
+  "Sybilla","Basement","Americanino","Mossimo","Index","Marquis","Foster","Tricot","Corona","Wados","Ellus","Doite","Lippi","Rip Curl","Quiksilver","Billabong","Roxy","Dr. Martens","Timberland","Michael Kors","Carolina Herrera","Sonoma","Ellesse","Kappa","Champion","Old Navy","Banana Republic","Primark","Bershka"];
 const COLORES = ["negro","negra","blanco","blanca","gris","azul","celeste","marino","rojo","roja","rosado","rosada","rosa","fucsia","verde","beige","café","cafe","camel","amarillo","amarilla","morado","morada","lila","naranjo","naranja","burdeo","dorado","plateado","crema","multicolor","estampado","estampada","denim","mostaza","turquesa","terracota","nude","khaki","caqui"];
 const COLOR_CANON = { negra:"Negro", blanca:"Blanco", roja:"Rojo", rosada:"Rosado", amarilla:"Amarillo", morada:"Morado", cafe:"Café", estampada:"Estampado" };
 
@@ -751,7 +779,9 @@ function detectar(nombre){
   if(m) out.marca = m;
   else {
     // palabra con mayúscula después del tipo: "Polera Kappa blanca" → Kappa
-    const pal = t.split(/\s+/); if(pal.length > 2 && /^\p{Lu}/u.test(pal[1]) && !/^talla$/i.test(pal[1]) && !COLORES.includes(pal[1].toLowerCase())) out.marca = pal[1];
+    const pal = t.split(/\s+/).slice(1);
+    const cand = pal.find(w => /^\p{Lu}/u.test(w) && !/^talla$/i.test(w) && !COLORES.includes(w.toLowerCase()) && !/^(XXS|XS|S|M|L|XL|XXL)$/.test(w));
+    if(cand) out.marca = cand;
   }
   const col = t.toLowerCase().split(/[\s,]+/).find(w => COLORES.includes(w));
   if(col) out.color = COLOR_CANON[col] || (col[0].toUpperCase() + col.slice(1));
@@ -850,9 +880,9 @@ $("#dlgProducto").addEventListener("drop", e => { if(e.dataTransfer?.files?.leng
 function leerFormulario(){
   const f = $("#formProducto"), p = S.editando;
   const nombre = f.nombre.value.trim();
-  const precio = f.precio.value === "" ? NaN : Math.round(Number(f.precio.value));
+  const precio = f.precio.value === "" ? null : Math.round(Number(f.precio.value));
   if(!nombre){ toast("Falta el nombre.", true); f.nombre.focus(); return null; }
-  if(isNaN(precio) || precio < 0){ toast("Revisa el precio.", true); f.precio.focus(); return null; }
+  if(precio !== null && (isNaN(precio) || precio < 0)){ toast("Revisa el precio.", true); f.precio.focus(); return null; }
   const pa = f.precioAnterior.value === "" ? null : Math.round(Number(f.precioAnterior.value));
   Object.assign(p, {
     nombre, categoria: f.categoria.value || "Otros", marca: normalizarMarca(f.marca.value), talla: f.talla.value.trim(),
@@ -893,6 +923,98 @@ $("#btnEliminarDesdeEditor").addEventListener("click", async () => {
 });
 $("#dlgProducto").addEventListener("cancel", e => { e.preventDefault(); cancelarEditor(); });
 $("#dlgProducto").querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", cancelarEditor));
+
+
+/* ---------- carga masiva: agrupar fotos por nombre o carpeta ---------- */
+let gruposMasiva = [];
+function claveGrupo(file){
+  const ruta = file.webkitRelativePath || "";
+  const partes = ruta.split("/");
+  if(partes.length >= 3) return partes[partes.length-2];          // carpeta/producto/foto.jpg → producto
+  const base = file.name.replace(/\.[^.]+$/, "");
+  return base.replace(/[\s_\-.]*\(?\d{1,3}\)?$/, "").replace(/[_]+/g, " ").trim() || base;
+}
+function numeroFoto(file){ const m = file.name.replace(/\.[^.]+$/,"").match(/(\d{1,3})\)?$/); return m ? +m[1] : 0; }
+function prepararMasiva(files){
+  files = files.filter(f => f.type.startsWith("image/") || /\.(jpe?g|png|webp|heic|heif)$/i.test(f.name));
+  const mapa = new Map();
+  for(const f of files){
+    const k = claveGrupo(f); const kk = k.toLowerCase();
+    if(!mapa.has(kk)) mapa.set(kk, { nombre: k, files: [] });
+    mapa.get(kk).files.push(f);
+  }
+  for(const g of mapa.values()){
+    g.files.sort((a,b) => numeroFoto(a) - numeroFoto(b) || a.name.localeCompare(b.name));
+    g.nombre = g.nombre.charAt(0).toUpperCase() + g.nombre.slice(1);
+    g.urls = g.files.map(f => URL.createObjectURL(f));
+    g.precio = "";
+  }
+  gruposMasiva = gruposMasiva.concat([...mapa.values()]);
+  renderMasiva();
+}
+function renderMasiva(){
+  const el = $("#masivaLista");
+  if(!gruposMasiva.length){ el.innerHTML = '<div class="empty" style="padding:20px">Aún no elegiste fotos.</div>'; }
+  else el.innerHTML = gruposMasiva.map((g,i) => {
+    const d = detectar(g.nombre);
+    const det = [d.categoria || "Otros", d.marca, d.talla && "Talla " + d.talla, d.color].filter(Boolean).map(esc).join(" · ");
+    return `<div class="grupo" data-i="${i}">
+      <div class="mini">${g.urls.slice(0,4).map(u=>`<img src="${u}" alt="">`).join("")}${g.urls.length>4?`<span class="hint">+${g.urls.length-4}</span>`:""}</div>
+      <div class="campos">
+        <input class="field" data-k="nombre" value="${esc(g.nombre)}" aria-label="Nombre">
+        <div class="linea">
+          <input class="field" data-k="precio" type="number" inputmode="numeric" min="0" placeholder="Precio (opcional)" value="${esc(g.precio)}" style="flex:1" aria-label="Precio">
+          <button type="button" class="btn ghost sm danger" data-quitar title="Quitar este grupo">Quitar</button>
+        </div>
+        <span class="hint">${g.files.length} foto${g.files.length===1?"":"s"} · ${det}</span>
+      </div></div>`;
+  }).join("");
+  const n = gruposMasiva.length;
+  $("#masivaInfo").textContent = n ? `${n} producto${n===1?"":"s"}, ${gruposMasiva.reduce((s,g)=>s+g.files.length,0)} fotos` : "";
+  $("#btnMasivaCrear").disabled = !n;
+  $("#btnMasivaCrear").textContent = n ? `Crear ${n} producto${n===1?"":"s"}` : "Crear productos";
+}
+$("#masivaLista").addEventListener("input", e => {
+  const g = gruposMasiva[+e.target.closest(".grupo").dataset.i]; const k = e.target.dataset.k; if(!g || !k) return;
+  g[k] = e.target.value;
+  if(k === "nombre"){ const d = detectar(g.nombre); e.target.closest(".campos").querySelector(".hint").textContent = `${g.files.length} foto${g.files.length===1?"":"s"} · ` + [d.categoria || "Otros", d.marca, d.talla && "Talla " + d.talla, d.color].filter(Boolean).join(" · "); }
+});
+$("#masivaLista").addEventListener("click", e => {
+  if(!e.target.closest("[data-quitar]")) return;
+  const i = +e.target.closest(".grupo").dataset.i; gruposMasiva[i].urls.forEach(u=>URL.revokeObjectURL(u)); gruposMasiva.splice(i,1); renderMasiva();
+});
+function cerrarMasiva(){ gruposMasiva.forEach(g=>g.urls.forEach(u=>URL.revokeObjectURL(u))); gruposMasiva = []; $("#dlgMasiva").close(); }
+$("#dlgMasiva").querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", cerrarMasiva));
+$("#dlgMasiva").addEventListener("cancel", e => { e.preventDefault(); cerrarMasiva(); });
+$("#btnMasiva").addEventListener("click", () => { gruposMasiva = []; renderMasiva(); $("#dlgMasiva").showModal(); });
+$("#btnMasivaFotos").addEventListener("click", () => $("#inputMasiva").click());
+$("#btnMasivaCarpeta").addEventListener("click", () => $("#inputCarpeta").click());
+["#inputMasiva","#inputCarpeta"].forEach(id => $(id).addEventListener("change", e => { const fs = [...e.target.files]; e.target.value = ""; prepararMasiva(fs); }));
+$("#dlgMasiva").addEventListener("dragover", e => { if(e.dataTransfer?.types?.includes("Files")) e.preventDefault(); });
+$("#dlgMasiva").addEventListener("drop", e => { if(e.dataTransfer?.files?.length){ e.preventDefault(); prepararMasiva([...e.dataTransfer.files]); } });
+$("#btnMasivaCrear").addEventListener("click", async () => {
+  const b = $("#btnMasivaCrear"); b.disabled = true;
+  let creados = 0;
+  for(const g of gruposMasiva){
+    const nombre = g.nombre.trim(); if(!nombre) continue;
+    b.textContent = `Procesando ${creados+1}/${gruposMasiva.length}…`;
+    const d = detectar(nombre); const ahora = new Date().toISOString();
+    const p = { id: nuevoId(), nombre, categoria: d.categoria || "Otros", marca: normalizarMarca(d.marca || ""), talla: d.talla || "",
+      precio: g.precio === "" ? null : Math.max(0, Math.round(Number(g.precio)) || 0), precioAnterior: null, condicion: "Muy bueno", estado: "disponible",
+      descripcion: "", fotos: [], creado: ahora, color: d.color || "", genero: "", destacado: false, actualizado: ahora };
+    for(const f of g.files){
+      try{
+        const blob = await comprimir(f);
+        const ruta = `${CARPETA_FOTOS}/${p.id}-${p.fotos.length+1}-${Date.now().toString(36)}.jpg`;
+        S.fotosNuevas.set(ruta, blob); idb.put(ruta, blob); p.fotos.push(ruta);
+      }catch{ toast("No pude leer la foto " + f.name, true); }
+    }
+    if(!S.datos.categorias.includes(p.categoria)) S.datos.categorias.push(p.categoria);
+    S.datos.productos.push(p); creados++;
+  }
+  cerrarMasiva(); cambio();
+  toast(`${creados} producto${creados===1?"":"s"} creado${creados===1?"":"s"}. Revisa precios y toca Publicar cambios.`);
+});
 
 /* ---------- ajustes ---------- */
 let categoriasTmp = [];
