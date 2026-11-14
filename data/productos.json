@@ -1,9 +1,9 @@
 {
   "version": 1,
-  "actualizado": "2026-11-14T22:03:23.721Z",
+  "actualizado": "2026-11-14T22:27:32.664Z",
   "tienda": {
     "nombre": "Cachudito Clóset Sale",
-    "descripcion": "Ropa de segunda mano en excelente estado",
+    "descripcion": "Solo venta en Santiago",
     "whatsapp": "",
     "instagram": "",
     "moneda": "CLP"
@@ -103,6 +103,48 @@
       "genero": "",
       "destacado": false,
       "actualizado": "2026-11-14T21:49:02Z"
+    },
+    {
+      "id": "p_mwgyjapxeztb",
+      "nombre": "Polera manga larga verde cloudy",
+      "categoria": "Camisetas",
+      "marca": "",
+      "talla": "",
+      "precio": null,
+      "precioAnterior": null,
+      "condicion": "Muy bueno",
+      "estado": "disponible",
+      "descripcion": "",
+      "fotos": [
+        "imagenes/p_mwgyjapxeztb-1-mwgyjaxd.jpg",
+        "imagenes/p_mwgyjapxeztb-2-mwgyjayb.jpg"
+      ],
+      "creado": "2026-11-14T22:08:30.981Z",
+      "color": "Verde",
+      "genero": "",
+      "destacado": false,
+      "actualizado": "2026-11-14T22:08:30.981Z"
+    },
+    {
+      "id": "p_mwgyjaybe64s",
+      "nombre": "Polera manga corta Adidas negra",
+      "categoria": "Camisetas",
+      "marca": "Adidas",
+      "talla": "",
+      "precio": null,
+      "precioAnterior": null,
+      "condicion": "Muy bueno",
+      "estado": "disponible",
+      "descripcion": "",
+      "fotos": [
+        "imagenes/p_mwgyjaybe64s-1-mwgyjaz4.jpg",
+        "imagenes/p_mwgyjaybe64s-2-mwgyjazu.jpg"
+      ],
+      "creado": "2026-11-14T22:08:31.283Z",
+      "color": "Negro",
+      "genero": "",
+      "destacado": false,
+      "actualizado": "2026-11-14T22:08:31.283Z"
     }
   ]
 }
