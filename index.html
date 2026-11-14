@@ -11,7 +11,8 @@
 <style>
 /* Layout: cabecera de tienda, barra de filtros fija (búsqueda + chips de prenda), panel de marcas/tallas plegable, grilla de fichas tipo etiqueta colgante */
 :root {
-  --bg: #f4f3f7;
+  --bg: #f2f4ef;
+  --forest-op: .10;
   --surface: #ffffff;
   --ink: #1e1b28;
   --muted: #6b6779;
@@ -36,7 +37,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #15131b; --surface: #1f1c27; --ink: #f1eff6; --muted: #a39fb2; --line: #322e3d;
+    --bg: #121611; --forest-op: .14; --surface: #1f1c27; --ink: #f1eff6; --muted: #a39fb2; --line: #322e3d;
     --accent: #ff6b95; --accent-ink: #1a0b11; --accent-soft: #3a1c27; --denim: #8fb2e6;
     --ok: #6fd3a0; --warn: #f2b65c; --warn-soft: #3a2b12; --sold: #7d7889;
     --tile-a: #2a2536; --tile-b: #222b38; --tile-c: #35282a; --tile-d: #22302a; --tile-ink: rgba(241,239,246,.45);
@@ -45,7 +46,7 @@
   }
 }
 :root[data-theme="dark"] {
-  --bg: #15131b; --surface: #1f1c27; --ink: #f1eff6; --muted: #a39fb2; --line: #322e3d;
+  --bg: #121611; --forest-op: .14; --surface: #1f1c27; --ink: #f1eff6; --muted: #a39fb2; --line: #322e3d;
   --accent: #ff6b95; --accent-ink: #1a0b11; --accent-soft: #3a1c27; --denim: #8fb2e6;
   --ok: #6fd3a0; --warn: #f2b65c; --warn-soft: #3a2b12; --sold: #7d7889;
   --tile-a: #2a2536; --tile-b: #222b38; --tile-c: #35282a; --tile-d: #22302a; --tile-ink: rgba(241,239,246,.45);
@@ -61,19 +62,40 @@ button { cursor: pointer; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Cabecera */
-.shop { padding-block: 28px 18px; display: grid; gap: 14px; }
-.shop-top { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+/* Bosque del sur: fondo tenue de toda la página + cabecera con bosque y aves */
+.forest-bg { position: fixed; inset: -20px; z-index: -1; background: url("imagenes/fondo/bosque.jpg") center / cover no-repeat; opacity: var(--forest-op); filter: blur(3px) saturate(.8); pointer-events: none; }
+.hero { position: relative; isolation: isolate; color: #f4f7ef; background: #1d2e1c url("imagenes/fondo/bosque.jpg") center 45% / cover no-repeat; border-bottom: 1px solid var(--line); }
+.hero::before { content: ""; position: absolute; inset: 0; z-index: -1; background: linear-gradient(90deg, rgba(12, 22, 12, .86) 0%, rgba(12, 22, 12, .62) 48%, rgba(12, 22, 12, .18) 100%); }
+.shop { padding-block: 32px 0; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px 24px; min-height: 280px; }
+.shop-text { align-self: center; display: grid; gap: 14px; padding-bottom: 28px; min-width: 0; }
+.birds { display: flex; align-items: flex-end; gap: 4px; }
+.bird { display: block; width: auto; max-width: none; filter: drop-shadow(0 6px 10px rgba(0, 0, 0, .35)); }
+.bird.rayadito { height: 128px; margin-bottom: 6px; }
+.bird.siete { height: 150px; margin-bottom: 40px; }
+.bird.cachudito { height: 250px; }
+@media (max-width: 760px) {
+  .shop { grid-template-columns: minmax(0, 1fr); min-height: 0; padding-block: 24px 0; }
+  .shop-text { padding-bottom: 4px; }
+  .birds { justify-content: flex-end; }
+  .bird.rayadito { height: 74px; margin-bottom: 4px; }
+  .bird.siete { height: 88px; margin-bottom: 22px; }
+  .bird.cachudito { height: 150px; }
+  .hero::before { background: linear-gradient(180deg, rgba(12, 22, 12, .84) 0%, rgba(12, 22, 12, .6) 55%, rgba(12, 22, 12, .25) 100%); }
+}
+.notice-wrap { padding-block: 14px 0; }
 .shop h1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(30px, 6vw, 48px); line-height: 1; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
-.shop p { margin: 6px 0 0; color: var(--muted); max-width: 60ch; }
+.shop p { margin: 0; color: rgba(244, 247, 239, .85); max-width: 52ch; text-shadow: 0 1px 2px rgba(0, 0, 0, .4); }
+.shop h1 { text-shadow: 0 2px 8px rgba(0, 0, 0, .35); }
 .contact { display: flex; flex-wrap: wrap; gap: 8px; }
-.contact a, .contact span { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); text-decoration: none; color: var(--ink); font-size: 13px; font-weight: 500; }
-.contact a:hover { border-color: var(--ink); }
+.contact a, .contact span { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1px solid rgba(244, 247, 239, .35); border-radius: 999px; background: rgba(12, 22, 12, .35); backdrop-filter: blur(4px); text-decoration: none; color: #f4f7ef; font-size: 13px; font-weight: 500; }
+.contact a:hover { border-color: #f4f7ef; }
+.contact:empty { display: none; }
 .contact svg { width: 15px; height: 15px; flex: none; }
 .notice { display: flex; gap: 10px; align-items: flex-start; background: var(--warn-soft); color: var(--warn); border-radius: 10px; padding: 10px 14px; font-size: 13px; }
 .notice strong { font-weight: 600; }
 
 /* Barra de filtros */
-.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); border-bottom: 1px solid var(--line); }
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: color-mix(in srgb, var(--bg) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
 .bar-inner { padding-block: 12px; display: grid; gap: 10px; }
 .row { display: flex; gap: 8px; align-items: center; min-width: 0; }
 .search { flex: 1; min-width: 0; position: relative; }
@@ -176,18 +198,24 @@ footer { padding-block: 0 32px; color: var(--muted); font-size: 12px; }
 <body>
 
 
-<header class="wrap shop">
-  <div class="shop-top">
-    <div>
+<div class="forest-bg" aria-hidden="true"></div>
+<header class="hero">
+  <div class="wrap shop">
+    <div class="shop-text">
       <h1 id="shop-name">Catálogo</h1>
       <p id="shop-desc"></p>
+      <div class="contact" id="contact"></div>
     </div>
-    <div class="contact" id="contact"></div>
-  </div>
-  <div class="notice" id="sample-notice" hidden>
-    <span><strong>Productos de ejemplo.</strong> Se reemplazan por las prendas reales cuando el propietario cargue su inventario.</span>
+    <div class="birds" aria-hidden="true">
+      <img class="bird rayadito" src="imagenes/fondo/rayadito.webp" alt="" title="Rayadito" width="520" height="348">
+      <img class="bird siete" src="imagenes/fondo/siete-colores.webp" alt="" title="Siete colores" width="346" height="364">
+      <img class="bird cachudito" src="imagenes/fondo/cachudito.webp" alt="" title="Cachudito" width="440" height="777">
+    </div>
   </div>
 </header>
+<div class="wrap notice-wrap" id="sample-notice" hidden>
+  <div class="notice"><span><strong>Productos de ejemplo.</strong> Se reemplazan por las prendas reales cuando el propietario cargue su inventario.</span></div>
+</div>
 
 <div class="bar">
   <div class="wrap bar-inner">
