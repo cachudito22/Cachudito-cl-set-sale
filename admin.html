@@ -1,0 +1,1046 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>Panel del catálogo</title>
+<style>
+:root{
+  --bg:#f6f4f1;--surface:#fff;--surface-2:#f0ede8;--text:#1d1b19;--muted:#6d6862;--line:#e2ddd6;
+  --accent:#2f6f5e;--accent-ink:#fff;--accent-soft:#e3efeb;
+  --ok:#2f7d4a;--ok-soft:#e2f2e7;--warn:#9a6a00;--warn-soft:#fbf0d4;--sold:#8b8580;--sold-soft:#ece9e5;
+  --danger:#b3261e;--danger-soft:#fbe4e2;
+  --radius:12px;--shadow:0 1px 2px rgba(0,0,0,.06),0 4px 14px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#151413;--surface:#1f1d1b;--surface-2:#2a2725;--text:#f1eeea;--muted:#a49e97;--line:#36322f;
+  --accent:#6cc2a8;--accent-ink:#0f1f1a;--accent-soft:#1f3631;
+  --ok:#7fd39b;--ok-soft:#1d3325;--warn:#f0c55a;--warn-soft:#3a2f13;--sold:#a49e97;--sold-soft:#2e2b28;
+  --danger:#ff8a80;--danger-soft:#3d1f1d;--shadow:none;
+}}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:var(--accent)}
+.hidden{display:none!important}
+
+/* header */
+header.top{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+header.top h1{font-size:17px;margin:0;flex:1;min-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header.top h1 small{display:block;font-size:12px;font-weight:400;color:var(--muted)}
+.pending{font-size:13px;padding:4px 10px;border-radius:999px;background:var(--warn-soft);color:var(--warn);font-weight:600}
+.pending.clean{background:var(--ok-soft);color:var(--ok)}
+
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:8px 14px;cursor:pointer;font-weight:600;display:inline-flex;align-items:center;gap:6px;min-height:40px}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.07)}
+.btn.danger{color:var(--danger)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.sm{min-height:32px;padding:4px 10px;font-size:13px}
+
+main{max-width:1180px;margin:0 auto;padding:16px}
+.banner{background:var(--warn-soft);color:var(--text);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px;margin-bottom:14px;font-size:14px}
+.banner b{color:var(--warn)}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+@media (max-width:600px){.stats{grid-template-columns:repeat(3,1fr);gap:6px}.stat{padding:8px 10px}.stat .n{font-size:16px}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:10px 14px}
+.stat .n{font-size:22px;font-weight:700}
+.stat .l{font-size:12px;color:var(--muted)}
+
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.toolbar input[type=search]{flex:1 1 220px}
+.field,.toolbar input,.toolbar select{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 10px;min-height:40px;width:auto}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.card.vendido .thumb img{filter:grayscale(1);opacity:.6}
+.thumb{aspect-ratio:4/5;background:var(--surface-2);position:relative;cursor:pointer}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb .nofoto{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px}
+.thumb .badges{position:absolute;top:8px;left:8px;display:flex;gap:4px;flex-wrap:wrap}
+.tag{font-size:11px;font-weight:700;padding:3px 7px;border-radius:999px;background:var(--surface);color:var(--text)}
+.tag.star{background:#f5c542;color:#3a2a00}
+.tag.cambio{background:var(--warn);color:#fff}
+.card .body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card .name{font-weight:600;line-height:1.25}
+.card .meta{font-size:13px;color:var(--muted)}
+.card .price{font-weight:700}
+.card .price s{color:var(--muted);font-weight:400;font-size:13px;margin-left:6px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:9px;overflow:hidden;margin-top:auto}
+.seg button{border:0;background:transparent;padding:6px 2px;font-size:12px;cursor:pointer;min-height:34px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on[data-e=disponible]{background:var(--ok-soft);color:var(--ok);font-weight:700}
+.seg button.on[data-e=reservado]{background:var(--warn-soft);color:var(--warn);font-weight:700}
+.seg button.on[data-e=vendido]{background:var(--sold-soft);color:var(--sold);font-weight:700}
+.actions{display:flex;gap:4px;justify-content:space-between}
+.empty{text-align:center;color:var(--muted);padding:40px 10px}
+
+/* dialogs */
+dialog{border:0;border-radius:16px;padding:0;background:var(--surface);color:var(--text);width:min(720px,calc(100vw - 24px));max-height:calc(100dvh - 24px);box-shadow:0 20px 60px rgba(0,0,0,.3)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+.dlg-head{position:sticky;top:0;background:var(--surface);display:flex;align-items:center;gap:8px;padding:14px 16px;border-bottom:1px solid var(--line);z-index:2}
+.dlg-head h2{font-size:17px;margin:0;flex:1}
+.dlg-body{padding:16px;display:grid;gap:14px}
+.dlg-foot{position:sticky;bottom:0;background:var(--surface);display:flex;gap:8px;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--line);flex-wrap:wrap}
+@media (max-width:600px){dialog{width:100vw;max-width:100vw;max-height:100dvh;height:100dvh;border-radius:0;margin:0}}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+label.f{display:grid;gap:4px;font-size:13px;color:var(--muted);font-weight:600}
+label.f .field{color:var(--text);font-weight:400;width:100%}
+textarea.field{min-height:80px;resize:vertical}
+.check{display:flex;align-items:center;gap:8px;font-size:14px}
+.check input{width:20px;height:20px}
+.hint{font-size:12px;color:var(--muted);font-weight:400}
+
+.fotos{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.foto{position:relative;aspect-ratio:4/5;border-radius:10px;overflow:hidden;background:var(--surface-2);border:2px solid transparent}
+.foto.portada{border-color:var(--accent)}
+.foto img{width:100%;height:100%;object-fit:cover;display:block}
+.foto .ctl{position:absolute;inset:auto 0 0 0;display:flex;justify-content:space-between;padding:4px;background:linear-gradient(transparent,rgba(0,0,0,.6))}
+.foto .ctl button{border:0;background:rgba(255,255,255,.92);color:#222;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:14px;padding:0}
+.foto .lbl{position:absolute;top:4px;left:4px;font-size:10px;font-weight:700;background:var(--accent);color:var(--accent-ink);padding:2px 6px;border-radius:999px}
+.addfoto{aspect-ratio:4/5;border:2px dashed var(--line);border-radius:10px;display:grid;place-items:center;text-align:center;color:var(--muted);cursor:pointer;font-size:13px;padding:6px}
+.addfoto:hover{border-color:var(--accent);color:var(--accent)}
+
+.toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:var(--text);color:var(--bg);padding:10px 16px;border-radius:10px;z-index:100;font-size:14px;max-width:calc(100vw - 32px);box-shadow:0 6px 20px rgba(0,0,0,.25)}
+.toast.err{background:var(--danger);color:#fff}
+.steps{margin:0;padding-left:20px;font-size:14px;display:grid;gap:6px}
+.steps code{background:var(--surface-2);padding:1px 5px;border-radius:5px}
+.inline-list{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:4px;background:var(--surface-2);border-radius:999px;padding:4px 6px 4px 10px;font-size:13px}
+.chip button{border:0;background:transparent;cursor:pointer;color:var(--muted);font-size:15px;line-height:1;padding:0 4px}
+.progress{font-size:14px;color:var(--muted)}
+.lbl-sec{font-size:13px;color:var(--muted);font-weight:600;margin-bottom:6px}
+details.mas{border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+details.mas summary{cursor:pointer;font-weight:600;font-size:14px}
+#detectado b{color:var(--text);font-weight:600}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1 id="tituloTienda">Panel del catálogo<small id="subtitulo">Cargando…</small></h1>
+  <span id="pendientes" class="pending clean">Sin cambios</span>
+  <button class="btn ghost" id="btnDescartar" title="Volver a la última versión publicada">Descartar</button>
+  <button class="btn primary" id="btnPublicar">Publicar cambios</button>
+  <button class="btn" id="btnAjustes" aria-label="Ajustes">⚙︎ Ajustes</button>
+</header>
+
+<main>
+  <div id="banner" class="banner hidden"></div>
+
+  <section class="stats" id="stats"></section>
+
+  <div class="toolbar">
+    <button class="btn primary" id="btnNuevo">＋ Nuevo producto</button>
+    <input type="search" id="q" placeholder="Buscar por nombre, marca, talla…" aria-label="Buscar">
+    <select id="fEstado" aria-label="Filtrar por estado">
+      <option value="">Todos los estados</option>
+      <option value="disponible">Disponibles</option>
+      <option value="reservado">Reservados</option>
+      <option value="vendido">Vendidos</option>
+    </select>
+    <select id="fCategoria" aria-label="Filtrar por categoría"></select>
+    <select id="fOrden" aria-label="Ordenar">
+      <option value="nuevos">Más nuevos</option>
+      <option value="antiguos">Más antiguos</option>
+      <option value="precio-asc">Precio ↑</option>
+      <option value="precio-desc">Precio ↓</option>
+      <option value="nombre">Nombre A–Z</option>
+    </select>
+  </div>
+
+  <section class="grid" id="lista"></section>
+</main>
+
+<!-- Editor de producto -->
+<dialog id="dlgProducto">
+  <form method="dialog" id="formProducto" novalidate>
+    <div class="dlg-head">
+      <h2 id="dlgProductoTitulo">Nuevo producto</h2>
+      <button type="button" class="btn ghost sm" data-close>✕</button>
+    </div>
+    <div class="dlg-body">
+      <div>
+        <div class="lbl-sec">1. Fotos <span class="hint">(la primera es la portada; se comprimen solas)</span></div>
+        <div class="fotos" id="fotosEditor"></div>
+        <input type="file" id="inputFotos" accept="image/*" multiple class="hidden">
+      </div>
+      <label class="f">2. Nombre
+        <input class="field" name="nombre" required maxlength="120" placeholder="Tipo + Marca + Color + Talla · Ej: Polera Zara blanca talla M" autocomplete="off">
+        <span class="hint" id="detectado"></span>
+      </label>
+      <label class="f">3. Precio
+        <input class="field" name="precio" type="number" inputmode="numeric" min="0" step="1" required placeholder="Ej: 5990">
+      </label>
+      <label class="f"><span style="display:flex;align-items:center;justify-content:space-between;gap:8px">4. Descripción <button type="button" class="btn ghost sm" id="btnPlantilla">Usar plantilla</button></span>
+        <textarea class="field" name="descripcion" maxlength="1500" rows="5" placeholder="Medidas, material, detalles…"></textarea>
+      </label>
+
+      <details id="masDetalles" class="mas">
+        <summary>Más detalles <span class="hint">(opcional: se completan solos desde el nombre)</span></summary>
+        <div class="dlg-body" style="padding:12px 0 0">
+          <div class="row">
+            <label class="f">Categoría
+              <select class="field" name="categoria" data-auto></select>
+            </label>
+            <label class="f">Marca
+              <input class="field" name="marca" list="dlMarcas" placeholder="Ej: Zara" autocomplete="off" data-auto>
+            </label>
+            <label class="f">Talla
+              <input class="field" name="talla" list="dlTallas" placeholder="Ej: M" autocomplete="off" data-auto>
+            </label>
+          </div>
+          <div class="row">
+            <label class="f">Color
+              <input class="field" name="color" list="dlColores" autocomplete="off" data-auto>
+            </label>
+            <label class="f">Condición
+              <select class="field" name="condicion">
+                <option>Nuevo con etiqueta</option>
+                <option>Como nuevo</option>
+                <option selected>Muy bueno</option>
+                <option>Bueno</option>
+                <option>Con detalles</option>
+              </select>
+            </label>
+            <label class="f">Género
+              <select class="field" name="genero">
+                <option value="">—</option>
+                <option>Mujer</option>
+                <option>Hombre</option>
+                <option>Unisex</option>
+                <option>Niños</option>
+              </select>
+            </label>
+          </div>
+          <div class="row">
+            <label class="f">Precio anterior <span class="hint">(para mostrar rebaja)</span>
+              <input class="field" name="precioAnterior" type="number" inputmode="numeric" min="0" step="1" placeholder="—">
+            </label>
+            <label class="f">Estado
+              <select class="field" name="estado">
+                <option value="disponible">Disponible</option>
+                <option value="reservado">Reservado</option>
+                <option value="vendido">Vendido</option>
+              </select>
+            </label>
+          </div>
+          <label class="check"><input type="checkbox" name="destacado"> Destacar en el catálogo</label>
+        </div>
+      </details>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn danger" id="btnEliminarDesdeEditor">Eliminar</button>
+      <span style="flex:1"></span>
+      <button type="button" class="btn" data-close>Cancelar</button>
+      <button type="button" class="btn" id="btnGuardarOtro">Guardar y agregar otro</button>
+      <button type="submit" class="btn primary">Guardar</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Ajustes -->
+<dialog id="dlgAjustes">
+  <form method="dialog" id="formAjustes">
+    <div class="dlg-head"><h2>Ajustes</h2><button type="button" class="btn ghost sm" data-close>✕</button></div>
+    <div class="dlg-body">
+      <h3 style="margin:0;font-size:15px">Datos de la tienda</h3>
+      <div class="row">
+        <label class="f">Nombre de la tienda<input class="field" name="t_nombre"></label>
+        <label class="f">Moneda<input class="field" name="t_moneda" maxlength="5" placeholder="CLP"></label>
+      </div>
+      <label class="f">Descripción corta<input class="field" name="t_descripcion"></label>
+      <div class="row">
+        <label class="f">WhatsApp <span class="hint">(con código de país, solo números: 56912345678)</span><input class="field" name="t_whatsapp" inputmode="tel"></label>
+        <label class="f">Instagram <span class="hint">(sin @)</span><input class="field" name="t_instagram"></label>
+      </div>
+
+      <h3 style="margin:8px 0 0;font-size:15px">Categorías</h3>
+      <div class="inline-list" id="listaCategorias"></div>
+      <div style="display:flex;gap:8px">
+        <input class="field" id="nuevaCategoria" placeholder="Nueva categoría" style="flex:1">
+        <button type="button" class="btn" id="btnAgregarCategoria">Agregar</button>
+      </div>
+
+      <h3 style="margin:8px 0 0;font-size:15px">Conexión con GitHub</h3>
+      <p class="hint" style="margin:0">Se guarda solo en este navegador. Sin conexión, el panel funciona en <b>modo prueba</b>: los cambios quedan en este dispositivo y puedes exportarlos.</p>
+      <div class="row">
+        <label class="f">Usuario u organización<input class="field" name="g_owner" placeholder="tu-usuario" autocapitalize="off" autocomplete="off"></label>
+        <label class="f">Repositorio<input class="field" name="g_repo" placeholder="catalogo" autocapitalize="off" autocomplete="off"></label>
+        <label class="f">Rama<input class="field" name="g_branch" placeholder="main" autocapitalize="off" autocomplete="off"></label>
+      </div>
+      <label class="f">Token de acceso
+        <input class="field" name="g_token" type="password" placeholder="github_pat_…" autocomplete="off">
+      </label>
+      <details>
+        <summary style="cursor:pointer;font-size:14px">¿Cómo obtengo el token?</summary>
+        <ol class="steps" style="margin-top:8px">
+          <li>En GitHub, abre <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">Settings → Developer settings → Fine-grained tokens → Generate new token</a>.</li>
+          <li>Nombre: <code>panel catálogo</code>. Expiración: la que prefieras (por ejemplo 1 año).</li>
+          <li>En <b>Repository access</b> elige <b>Only select repositories</b> y marca tu repositorio del catálogo.</li>
+          <li>En <b>Permissions → Repository permissions → Contents</b> elige <b>Read and write</b>.</li>
+          <li>Genera el token, cópialo y pégalo aquí. No lo compartas con nadie.</li>
+        </ol>
+      </details>
+
+      <h3 style="margin:8px 0 0;font-size:15px">Respaldo</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button type="button" class="btn" id="btnExportar">Descargar respaldo (JSON)</button>
+        <button type="button" class="btn" id="btnImportar">Importar JSON…</button>
+        <input type="file" id="inputImportar" accept="application/json,.json" class="hidden">
+      </div>
+    </div>
+    <div class="dlg-foot">
+      <button type="button" class="btn" data-close>Cancelar</button>
+      <button type="submit" class="btn primary">Guardar ajustes</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Confirmación genérica -->
+<dialog id="dlgConfirmar" style="width:min(440px,calc(100vw - 24px));height:auto">
+  <div class="dlg-head"><h2 id="confTitulo">¿Seguro?</h2></div>
+  <div class="dlg-body"><div id="confTexto"></div></div>
+  <div class="dlg-foot">
+    <button type="button" class="btn" id="confNo">Cancelar</button>
+    <button type="button" class="btn primary" id="confSi">Aceptar</button>
+  </div>
+</dialog>
+
+<datalist id="dlMarcas"></datalist>
+<datalist id="dlTallas">
+  <option>XS</option><option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option><option>Única</option>
+  <option>34</option><option>36</option><option>38</option><option>40</option><option>42</option><option>44</option>
+  <option>26</option><option>28</option><option>30</option><option>32</option>
+</datalist>
+<datalist id="dlColores"></datalist>
+
+<script>
+"use strict";
+/* ============================================================
+   Panel de administración del catálogo
+   Formato de datos: ver FORMATO_DATOS.md
+   ============================================================ */
+
+const RUTA_DATOS = "data/productos.json";
+const CARPETA_FOTOS = "imagenes";
+const MAX_LADO_FOTO = 1200;
+const CALIDAD_FOTO = 0.82;
+const CONDICIONES = ["Nuevo con etiqueta","Como nuevo","Muy bueno","Bueno","Con detalles"];
+const ESTADOS = ["disponible","reservado","vendido"];
+
+const DATOS_INICIALES = () => ({
+  version: 1,
+  actualizado: new Date().toISOString(),
+  tienda: { nombre: "Mi tienda", descripcion: "", whatsapp: "", instagram: "", moneda: "CLP" },
+  categorias: ["Camisetas","Tops","Pantalones","Faldas","Vestidos","Chaquetas","Polerones","Zapatos","Accesorios"],
+  productos: []
+});
+
+/* ---------- almacenamiento local seguro ---------- */
+const ls = {
+  get(k, d=null){ try{ const v = localStorage.getItem(k); return v==null ? d : JSON.parse(v); }catch{ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch{ return false; } },
+  del(k){ try{ localStorage.removeItem(k); }catch{} }
+};
+
+/* IndexedDB mínimo para fotos pendientes de publicar */
+const idb = (() => {
+  let p = null;
+  function open(){
+    if(p) return p;
+    p = new Promise((res, rej) => {
+      try{
+        const r = indexedDB.open("panel-catalogo", 1);
+        r.onupgradeneeded = () => r.result.createObjectStore("fotos");
+        r.onsuccess = () => res(r.result);
+        r.onerror = () => rej(r.error);
+      }catch(e){ rej(e); }
+    });
+    return p;
+  }
+  async function tx(mode, fn){
+    try{
+      const db = await open();
+      return await new Promise((res, rej) => {
+        const t = db.transaction("fotos", mode); const s = t.objectStore("fotos");
+        const r = fn(s); t.oncomplete = () => res(r && r.result); t.onerror = () => rej(t.error);
+      });
+    }catch{ return undefined; }
+  }
+  return {
+    put:(k,v)=>tx("readwrite",s=>s.put(v,k)),
+    get:(k)=>tx("readonly",s=>s.get(k)),
+    del:(k)=>tx("readwrite",s=>s.delete(k)),
+    clear:()=>tx("readwrite",s=>s.clear())
+  };
+})();
+
+/* ---------- estado ---------- */
+const S = {
+  datos: DATOS_INICIALES(),
+  publicado: "",            // JSON de la última versión publicada/cargada
+  remotoSha: null,          // sha del blob de productos.json al cargar
+  fotosNuevas: new Map(),   // ruta -> Blob (aún no subidas)
+  fotosBorrar: new Set(),   // rutas en el repo a eliminar al publicar
+  urls: new Map(),          // ruta -> objectURL
+  cfg: ls.get("panel-gh", {owner:"",repo:"",branch:"main",token:""}),
+  editando: null,           // copia del producto en edición
+  publicando: false
+};
+const conGitHub = () => !!(S.cfg.owner && S.cfg.repo && S.cfg.token);
+const claveBorrador = () => "panel-borrador:" + (conGitHub() ? `${S.cfg.owner}/${S.cfg.repo}` : "local");
+
+/* ---------- utilidades ---------- */
+const $ = (s, el=document) => el.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const nuevoId = () => "p_" + Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+function precioFmt(n){
+  const m = S.datos.tienda.moneda || "CLP";
+  if(n == null || n === "" || isNaN(n)) return "—";
+  try{ return new Intl.NumberFormat("es-CL",{style:"currency",currency:m,maximumFractionDigits:m==="CLP"?0:2}).format(n); }
+  catch{ return "$" + Number(n).toLocaleString("es-CL"); }
+}
+function normalizarMarca(m){
+  m = String(m||"").trim().replace(/\s+/g," ");
+  if(!m) return "";
+  const existente = marcas().find(x => x.toLowerCase() === m.toLowerCase());
+  if(existente) return existente;
+  return m === m.toLowerCase() ? m.replace(/(^|[\s-])(\p{L})/gu, (a,b,c) => b + c.toUpperCase()) : m;
+}
+const marcas = () => [...new Set(S.datos.productos.map(p => (p.marca||"").trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"es"));
+
+let toastT;
+function toast(msg, err=false){
+  document.querySelectorAll(".toast").forEach(t=>t.remove());
+  const t = document.createElement("div"); t.className = "toast" + (err?" err":""); t.textContent = msg;
+  document.body.appendChild(t); clearTimeout(toastT); toastT = setTimeout(()=>t.remove(), err?6000:2600);
+}
+function confirmar(titulo, html, si="Aceptar", peligro=false){
+  return new Promise(res => {
+    const d = $("#dlgConfirmar");
+    $("#confTitulo").textContent = titulo; $("#confTexto").innerHTML = html;
+    const b = $("#confSi"); b.textContent = si; b.className = "btn " + (peligro ? "danger" : "primary");
+    const fin = v => { d.close(); res(v); };
+    $("#confNo").onclick = () => fin(false); b.onclick = () => fin(true);
+    d.oncancel = e => { e.preventDefault(); fin(false); };
+    d.showModal();
+  });
+}
+
+/* Normaliza datos leídos (tolerante a campos faltantes) */
+function normalizar(d){
+  const base = DATOS_INICIALES();
+  d = d && typeof d === "object" ? d : {};
+  const out = {
+    ...d,
+    version: d.version || 1,
+    actualizado: d.actualizado || base.actualizado,
+    tienda: { ...base.tienda, ...(d.tienda||{}) },
+    categorias: Array.isArray(d.categorias) && d.categorias.length ? d.categorias.map(c => typeof c === "string" ? c : (c && (c.nombre||c.id)) || "").filter(Boolean) : base.categorias,
+    productos: Array.isArray(d.productos) ? d.productos.map(p => ({
+      id: p.id || nuevoId(), nombre: p.nombre || p.titulo || "", categoria: p.categoria || "", marca: p.marca || "",
+      talla: p.talla || "", precio: Number(p.precio)||0,
+      precioAnterior: p.precioAnterior == null || p.precioAnterior === "" ? null : Number(p.precioAnterior),
+      condicion: p.condicion || "Muy bueno", estado: ESTADOS.includes(p.estado) ? p.estado : "disponible",
+      descripcion: p.descripcion || "", fotos: Array.isArray(p.fotos) ? p.fotos : [],
+      creado: p.creado || new Date().toISOString(), color: p.color || "", genero: p.genero || "",
+      destacado: !!p.destacado, actualizado: p.actualizado || p.creado || new Date().toISOString()
+    })) : []
+  };
+  // conservar campos desconocidos de cada producto
+  if(Array.isArray(d.productos)) out.productos = out.productos.map((p,i) => ({ ...d.productos[i], ...p }));
+  out.productos.forEach(p => { delete p.titulo; });
+  return out;
+}
+
+/* ---------- base64 ---------- */
+function bytesB64(bytes){
+  let s = ""; const CH = 0x8000;
+  for(let i=0;i<bytes.length;i+=CH) s += String.fromCharCode.apply(null, bytes.subarray(i,i+CH));
+  return btoa(s);
+}
+const textoB64 = t => bytesB64(new TextEncoder().encode(t));
+const b64Texto = b => new TextDecoder().decode(Uint8Array.from(atob(b.replace(/\s/g,"")), c => c.charCodeAt(0)));
+async function blobB64(blob){ return bytesB64(new Uint8Array(await blob.arrayBuffer())); }
+
+/* ---------- GitHub ---------- */
+async function gh(path, opts={}){
+  const r = await fetch(`https://api.github.com/repos/${encodeURIComponent(S.cfg.owner)}/${encodeURIComponent(S.cfg.repo)}${path}`, {
+    ...opts,
+    headers: { "Accept":"application/vnd.github+json", "Authorization":"Bearer " + S.cfg.token, "X-GitHub-Api-Version":"2022-11-28", ...(opts.body?{"Content-Type":"application/json"}:{}) },
+    cache: "no-store"
+  });
+  if(!r.ok){
+    let msg = ""; try{ msg = (await r.json()).message; }catch{}
+    const e = new Error(msg || r.statusText); e.status = r.status; throw e;
+  }
+  return r.status === 204 ? null : r.json();
+}
+function errorGitHub(e){
+  if(e.status === 401) return "El token no es válido o expiró. Revisa Ajustes.";
+  if(e.status === 403) return "El token no tiene permiso de escritura (Contents: Read and write) en este repositorio.";
+  if(e.status === 404) return "No encontré el repositorio. Revisa usuario, nombre y rama en Ajustes, y que el token tenga acceso a ese repositorio.";
+  if(e.status === 409) return "El repositorio está vacío. En GitHub, crea un archivo (por ejemplo un README) y vuelve a intentar.";
+  if(e.status === 422) return "GitHub rechazó el cambio: " + e.message;
+  if(e instanceof TypeError) return "Sin conexión a internet o GitHub no respondió.";
+  return "Error de GitHub: " + e.message;
+}
+const rama = () => S.cfg.branch || "main";
+function urlRaw(ruta){
+  return `https://raw.githubusercontent.com/${S.cfg.owner}/${S.cfg.repo}/${rama()}/${ruta.split("/").map(encodeURIComponent).join("/")}`;
+}
+function urlSitio(){
+  const o = S.cfg.owner.toLowerCase(), r = S.cfg.repo;
+  return r.toLowerCase() === `${o}.github.io` ? `https://${o}.github.io/` : `https://${o}.github.io/${r}/`;
+}
+
+async function cargarRemoto(){
+  const r = await gh(`/contents/${RUTA_DATOS}?ref=${encodeURIComponent(rama())}`).catch(e => { if(e.status===404) return null; throw e; });
+  if(!r) return { datos: null, sha: null };
+  let texto;
+  if(r.content) texto = b64Texto(r.content);
+  else { const b = await gh(`/git/blobs/${r.sha}`); texto = b64Texto(b.content); }
+  return { datos: JSON.parse(texto), sha: r.sha };
+}
+
+/* Publica todo en un solo commit (JSON + fotos nuevas + fotos borradas) */
+async function publicarGitHub(json, mensaje){
+  let ref;
+  try{ ref = await gh(`/git/ref/heads/${encodeURIComponent(rama())}`); }
+  catch(e){
+    if(e.status === 404 || e.status === 409){
+      // repositorio vacío: inicializar con la API de contenidos
+      await gh(`/contents/${RUTA_DATOS}`, { method:"PUT", body: JSON.stringify({ message:"Inicializar catálogo", content:textoB64(json), branch: rama() }) });
+      ref = await gh(`/git/ref/heads/${encodeURIComponent(rama())}`);
+    } else throw e;
+  }
+  const head = ref.object.sha;
+  const commit = await gh(`/git/commits/${head}`);
+  const arbol = [];
+  let i = 0; const total = S.fotosNuevas.size;
+  for(const [ruta, blob] of S.fotosNuevas){
+    i++; progreso(`Subiendo fotos ${i}/${total}…`);
+    const b = await gh(`/git/blobs`, { method:"POST", body: JSON.stringify({ content: await blobB64(blob), encoding:"base64" }) });
+    arbol.push({ path: ruta, mode:"100644", type:"blob", sha: b.sha });
+  }
+  progreso("Guardando datos…");
+  const bj = await gh(`/git/blobs`, { method:"POST", body: JSON.stringify({ content: textoB64(json), encoding:"base64" }) });
+  arbol.push({ path: RUTA_DATOS, mode:"100644", type:"blob", sha: bj.sha });
+  for(const ruta of S.fotosBorrar) arbol.push({ path: ruta, mode:"100644", type:"blob", sha: null });
+  let tree;
+  try{ tree = await gh(`/git/trees`, { method:"POST", body: JSON.stringify({ base_tree: commit.tree.sha, tree: arbol }) }); }
+  catch(e){
+    // si alguna foto a borrar ya no existe, reintentar sin borrados
+    if(e.status === 422 && S.fotosBorrar.size){
+      tree = await gh(`/git/trees`, { method:"POST", body: JSON.stringify({ base_tree: commit.tree.sha, tree: arbol.filter(x => x.sha !== null) }) });
+    } else throw e;
+  }
+  const nuevo = await gh(`/git/commits`, { method:"POST", body: JSON.stringify({ message: mensaje, tree: tree.sha, parents:[head] }) });
+  await gh(`/git/refs/heads/${encodeURIComponent(rama())}`, { method:"PATCH", body: JSON.stringify({ sha: nuevo.sha }) });
+  return bj.sha;
+}
+
+/* ---------- borrador local ---------- */
+function guardarBorrador(){
+  ls.set(claveBorrador(), {
+    datos: S.datos, publicado: S.publicado, remotoSha: S.remotoSha,
+    fotosNuevas: [...S.fotosNuevas.keys()], fotosBorrar: [...S.fotosBorrar]
+  });
+}
+async function restaurarBorrador(){
+  const b = ls.get(claveBorrador());
+  if(!b) return false;
+  S.datos = normalizar(b.datos); S.publicado = b.publicado || ""; S.remotoSha = b.remotoSha || null;
+  S.fotosBorrar = new Set(b.fotosBorrar || []); S.fotosNuevas = new Map();
+  for(const ruta of b.fotosNuevas || []){ const blob = await idb.get(ruta); if(blob) S.fotosNuevas.set(ruta, blob); }
+  return true;
+}
+function hayCambios(){
+  return S.fotosNuevas.size > 0 || S.fotosBorrar.size > 0 || JSON.stringify(sinMarcaTiempo(S.datos)) !== JSON.stringify(sinMarcaTiempo(S.publicado ? JSON.parse(S.publicado) : null));
+}
+const sinMarcaTiempo = d => d ? { ...d, actualizado: undefined } : null;
+function contarCambios(){
+  if(!S.publicado) return S.datos.productos.length + (S.fotosNuevas.size?1:0);
+  const antes = JSON.parse(S.publicado); const mapa = new Map((antes.productos||[]).map(p => [p.id, JSON.stringify(p)]));
+  let n = 0; const ids = new Set();
+  for(const p of S.datos.productos){ ids.add(p.id); if(mapa.get(p.id) !== JSON.stringify(p)) n++; }
+  for(const id of mapa.keys()) if(!ids.has(id)) n++;
+  if(JSON.stringify(antes.tienda) !== JSON.stringify(S.datos.tienda) || JSON.stringify(antes.categorias) !== JSON.stringify(S.datos.categorias)) n++;
+  return n;
+}
+function cambio(){ S.datos.actualizado = new Date().toISOString(); guardarBorrador(); render(); }
+
+/* ---------- fotos ---------- */
+function urlFoto(ruta){
+  if(S.urls.has(ruta)) return S.urls.get(ruta);
+  const blob = S.fotosNuevas.get(ruta);
+  if(blob){ const u = URL.createObjectURL(blob); S.urls.set(ruta,u); return u; }
+  if(/^(https?:|data:|blob:)/.test(ruta)) return ruta;
+  return conGitHub() ? urlRaw(ruta) : ruta;
+}
+async function comprimir(file){
+  let bmp;
+  try{ bmp = await createImageBitmap(file, { imageOrientation:"from-image" }); }
+  catch{
+    bmp = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(file); });
+  }
+  const w0 = bmp.width, h0 = bmp.height, k = Math.min(1, MAX_LADO_FOTO / Math.max(w0, h0));
+  const w = Math.round(w0*k), h = Math.round(h0*k);
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const ctx = c.getContext("2d"); ctx.fillStyle = "#fff"; ctx.fillRect(0,0,w,h); ctx.drawImage(bmp, 0, 0, w, h);
+  return await new Promise(res => c.toBlob(res, "image/jpeg", CALIDAD_FOTO));
+}
+async function agregarFotos(files){
+  const p = S.editando; if(!p) return;
+  for(const f of files){
+    if(!f.type.startsWith("image/")) continue;
+    try{
+      const blob = await comprimir(f);
+      const ruta = `${CARPETA_FOTOS}/${p.id}-${Date.now().toString(36)}${Math.random().toString(36).slice(2,5)}.jpg`;
+      S.fotosNuevas.set(ruta, blob); idb.put(ruta, blob);
+      p.fotos.push(ruta);
+    }catch{ toast("No pude leer una de las fotos (" + f.name + ").", true); }
+  }
+  renderFotosEditor();
+}
+function quitarFoto(ruta){
+  if(S.fotosNuevas.has(ruta)){ S.fotosNuevas.delete(ruta); idb.del(ruta); }
+  else if(ruta.startsWith(CARPETA_FOTOS + "/")) S.fotosBorrar.add(ruta);
+}
+
+/* ---------- render ---------- */
+function render(){
+  const d = S.datos;
+  $("#tituloTienda").firstChild.textContent = d.tienda.nombre || "Panel del catálogo";
+  $("#subtitulo").textContent = conGitHub() ? `Conectado a ${S.cfg.owner}/${S.cfg.repo}` : "Modo prueba (sin conexión a GitHub)";
+  document.title = "Panel · " + (d.tienda.nombre || "catálogo");
+
+  const cambios = hayCambios(); const n = cambios ? contarCambios() : 0;
+  const chip = $("#pendientes");
+  chip.className = "pending" + (cambios ? "" : " clean");
+  chip.textContent = cambios ? (n === 1 ? "1 cambio sin publicar" : `${n || ""} cambios sin publicar`.trim()) : (conGitHub() ? "Todo publicado" : "Sin cambios");
+  $("#btnPublicar").disabled = !cambios || S.publicando;
+  $("#btnPublicar").textContent = conGitHub() ? "Publicar cambios" : "Descargar JSON";
+  $("#btnDescartar").classList.toggle("hidden", !cambios || !S.publicado);
+
+  const banner = $("#banner");
+  if(!conGitHub()){
+    banner.innerHTML = `<b>Modo prueba.</b> Los cambios se guardan solo en este dispositivo. Para publicar en tu sitio, conecta tu repositorio en <a href="#" id="lnkAjustes">Ajustes</a>.`;
+    banner.classList.remove("hidden");
+    $("#lnkAjustes").onclick = e => { e.preventDefault(); abrirAjustes(); };
+  } else banner.classList.add("hidden");
+
+  // estadísticas
+  const ps = d.productos;
+  const disp = ps.filter(p=>p.estado==="disponible"), res = ps.filter(p=>p.estado==="reservado"), vend = ps.filter(p=>p.estado==="vendido");
+  const suma = a => a.reduce((s,p)=>s+(Number(p.precio)||0),0);
+  $("#stats").innerHTML = [
+    [disp.length,"Disponibles"],[res.length,"Reservados"],[vend.length,"Vendidos"],
+    [precioFmt(suma(disp)),"Valor en venta"],[precioFmt(suma(vend)),"Total vendido"]
+  ].map(([n,l])=>`<div class="stat"><div class="n">${esc(n)}</div><div class="l">${l}</div></div>`).join("");
+
+  // filtros
+  const fc = $("#fCategoria"), sel = fc.value;
+  fc.innerHTML = `<option value="">Todas las categorías</option>` + d.categorias.map(c=>`<option ${c===sel?"selected":""}>${esc(c)}</option>`).join("");
+  $("#dlMarcas").innerHTML = marcas().map(m=>`<option value="${esc(m)}">`).join("");
+  $("#dlColores").innerHTML = [...new Set(["Negro","Blanco","Gris","Azul","Celeste","Rojo","Rosado","Verde","Beige","Café","Amarillo","Morado","Multicolor", ...ps.map(p=>p.color).filter(Boolean)])].map(c=>`<option value="${esc(c)}">`).join("");
+
+  const q = $("#q").value.trim().toLowerCase(), fe = $("#fEstado").value, fcat = fc.value, ord = $("#fOrden").value;
+  let lista = ps.filter(p =>
+    (!fe || p.estado === fe) && (!fcat || p.categoria === fcat) &&
+    (!q || [p.nombre,p.marca,p.talla,p.color,p.categoria,p.descripcion].join(" ").toLowerCase().includes(q)));
+  const cmp = {
+    "nuevos": (a,b)=> (b.creado||"").localeCompare(a.creado||""),
+    "antiguos": (a,b)=> (a.creado||"").localeCompare(b.creado||""),
+    "precio-asc": (a,b)=> a.precio-b.precio,
+    "precio-desc": (a,b)=> b.precio-a.precio,
+    "nombre": (a,b)=> a.nombre.localeCompare(b.nombre,"es")
+  }[ord];
+  lista.sort(cmp);
+
+  const antes = S.publicado ? new Map((JSON.parse(S.publicado).productos||[]).map(p=>[p.id, JSON.stringify(p)])) : new Map();
+  const el = $("#lista");
+  if(!ps.length){ el.innerHTML = `<div class="empty" style="grid-column:1/-1">Aún no hay productos.<br><br><button class="btn primary" onclick="abrirEditor()">＋ Agregar el primero</button></div>`; return; }
+  if(!lista.length){ el.innerHTML = `<div class="empty" style="grid-column:1/-1">Ningún producto coincide con la búsqueda.</div>`; return; }
+  el.innerHTML = lista.map(p => {
+    const foto = p.fotos[0];
+    const mod = antes.get(p.id) !== JSON.stringify(p);
+    return `<article class="card ${p.estado}" data-id="${esc(p.id)}">
+      <div class="thumb" data-act="editar">
+        ${foto ? `<img loading="lazy" src="${esc(urlFoto(foto))}" alt="">` : `<div class="nofoto">Sin foto</div>`}
+        <div class="badges">${p.destacado?'<span class="tag star">★ Destacado</span>':""}${mod && S.publicado?'<span class="tag cambio">Sin publicar</span>':""}${p.fotos.length>1?`<span class="tag">${p.fotos.length} fotos</span>`:""}</div>
+      </div>
+      <div class="body">
+        <div class="name">${esc(p.nombre) || "<i>Sin nombre</i>"}</div>
+        <div class="meta">${esc([p.categoria, p.marca, p.talla && "Talla " + p.talla].filter(Boolean).join(" · "))}</div>
+        <div class="price">${precioFmt(p.precio)}${p.precioAnterior>p.precio?`<s>${precioFmt(p.precioAnterior)}</s>`:""}</div>
+        <div class="seg" role="group" aria-label="Estado">
+          ${ESTADOS.map(e=>`<button type="button" data-act="estado" data-e="${e}" class="${p.estado===e?"on":""}">${e[0].toUpperCase()+e.slice(1)}</button>`).join("")}
+        </div>
+        <div class="actions">
+          <button class="btn ghost sm" data-act="editar">Editar</button>
+          <button class="btn ghost sm" data-act="duplicar" title="Crear una copia para una prenda parecida">Duplicar</button>
+          <button class="btn ghost sm danger" data-act="eliminar">Eliminar</button>
+        </div>
+      </div>
+    </article>`;
+  }).join("");
+}
+
+$("#lista").addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"); if(!b) return;
+  const card = b.closest(".card"); const p = S.datos.productos.find(x => x.id === card.dataset.id); if(!p) return;
+  const act = b.dataset.act;
+  if(act === "editar") abrirEditor(p.id);
+  else if(act === "estado"){ if(p.estado !== b.dataset.e){ p.estado = b.dataset.e; p.actualizado = new Date().toISOString(); cambio(); toast(`"${p.nombre}" marcado como ${b.dataset.e}.`); } }
+  else if(act === "duplicar"){
+    const c = { ...structuredClone(p), id: nuevoId(), nombre: p.nombre + " (copia)", fotos: [], estado:"disponible", creado: new Date().toISOString(), actualizado: new Date().toISOString(), destacado:false };
+    S.datos.productos.push(c); cambio(); abrirEditor(c.id); toast("Copia creada. Agrega sus fotos y ajusta lo necesario.");
+  }
+  else if(act === "eliminar") eliminarProducto(p.id);
+});
+
+async function eliminarProducto(id){
+  const p = S.datos.productos.find(x => x.id === id); if(!p) return false;
+  const ok = await confirmar("Eliminar producto", `¿Eliminar <b>${esc(p.nombre)}</b> y sus fotos? <br><span class="hint">Si solo se vendió, es mejor marcarlo como <b>Vendido</b> para conservar el historial.</span>`, "Eliminar", true);
+  if(!ok) return false;
+  p.fotos.forEach(quitarFoto);
+  S.datos.productos = S.datos.productos.filter(x => x.id !== id);
+  cambio(); toast("Producto eliminado. Recuerda publicar los cambios.");
+  return true;
+}
+
+/* ---------- estándar de nombres: detectar categoría, marca, talla y color ---------- */
+const TIPOS = [
+  [/^(polera|poleras|camiseta|remera|t-?shirt|playera)\b/i, ["Camisetas"]],
+  [/^(top|crop|peto|body|musculosa|bralette|corset)\b/i, ["Tops"]],
+  [/^(blusa|camisa)\b/i, ["Blusas","Camisas","Tops"]],
+  [/^(jeans?|pantal[oó]n|pantalones|jogger|calza|leggings?|buzo|cargo)\b/i, ["Pantalones"]],
+  [/^(short|shorts|bermuda)\b/i, ["Shorts","Pantalones"]],
+  [/^(falda|minifalda|pollera)\b/i, ["Faldas"]],
+  [/^(vestido|enterito|jumpsuit|mono)\b/i, ["Vestidos"]],
+  [/^(chaqueta|parka|abrigo|chaquet[oó]n|casaca|blazer|cortaviento|chaleco|trench|bomber)\b/i, ["Chaquetas"]],
+  [/^(poler[oó]n|sweater|su[eé]ter|hoodie|cardigan|c[aá]rdigan|sudadera|chomba)\b/i, ["Polerones"]],
+  [/^(zapatillas?|zapatos?|botas?|botines?|sandalias?|tacones?|mocasines?|chalas|pantuflas)\b/i, ["Zapatos","Calzado"]],
+  [/^(cartera|bolso|mochila|cintur[oó]n|gorro|jockey|bufanda|lentes|collar|aros|pulsera|billetera|pañuelo|sombrero|guantes)\b/i, ["Accesorios"]]
+];
+const MARCAS_CONOCIDAS = ["Zara","H&M","Mango","Forever 21","Nike","Adidas","Puma","Reebok","Fila","New Balance","Under Armour","Converse","Vans","Skechers",
+  "Levi's","Tommy Hilfiger","Calvin Klein","Ralph Lauren","Lacoste","Guess","Gap","Old Navy","Uniqlo","Shein","Pull&Bear","Bershka","Stradivarius",
+  "Massimo Dutti","Topshop","Abercrombie","Hollister","American Eagle","Columbia","The North Face","Patagonia","Desigual","Benetton","Esprit",
+  "Sybilla","Basement","Americanino","Mossimo","Index","Marquis","Foster","Tricot","Corona","Wados","Ellus","Doite","Lippi","Rip Curl","Quiksilver","Billabong","Roxy","Dr. Martens","Timberland","Michael Kors","Carolina Herrera","Desigual"];
+const COLORES = ["negro","negra","blanco","blanca","gris","azul","celeste","marino","rojo","roja","rosado","rosada","rosa","fucsia","verde","beige","café","cafe","camel","amarillo","amarilla","morado","morada","lila","naranjo","naranja","burdeo","dorado","plateado","crema","multicolor","estampado","estampada","denim","mostaza","turquesa","terracota","nude","khaki","caqui"];
+const COLOR_CANON = { negra:"Negro", blanca:"Blanco", roja:"Rojo", rosada:"Rosado", amarilla:"Amarillo", morada:"Morado", cafe:"Café", estampada:"Estampado" };
+
+function detectar(nombre){
+  const t = String(nombre||"").trim(); const out = {};
+  if(!t) return out;
+  for(const [re, cats] of TIPOS){
+    if(re.test(t)){ out.categoria = cats.find(c => S.datos.categorias.includes(c)) || cats[0]; break; }
+  }
+  const talla = t.match(/\btalla\s+([A-Za-z0-9./-]+)/i) || t.match(/\b(XXS|XS|S|M|L|XL|XXL|XXXL|[2-5]\d)\s*$/);
+  if(talla) out.talla = talla[1].toUpperCase().replace(/^UNICA$/,"Única");
+  const bajo = " " + t.toLowerCase() + " ";
+  const candidatas = [...new Set([...marcas(), ...MARCAS_CONOCIDAS])].sort((a,b)=>b.length-a.length);
+  const m = candidatas.find(mm => { const x = mm.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); return new RegExp(`(^|[\\s,(])${x}($|[\\s,)])`).test(bajo); });
+  if(m) out.marca = m;
+  else {
+    // palabra con mayúscula después del tipo: "Polera Kappa blanca" → Kappa
+    const pal = t.split(/\s+/); if(pal.length > 2 && /^\p{Lu}/u.test(pal[1]) && !/^talla$/i.test(pal[1]) && !COLORES.includes(pal[1].toLowerCase())) out.marca = pal[1];
+  }
+  const col = t.toLowerCase().split(/[\s,]+/).find(w => COLORES.includes(w));
+  if(col) out.color = COLOR_CANON[col] || (col[0].toUpperCase() + col.slice(1));
+  return out;
+}
+const PLANTILLA = "Medidas: \nMaterial: \nDetalles: ";
+// quita las líneas de la plantilla que quedaron vacías
+const limpiarPlantilla = t => String(t||"").split("\n").filter(l => !/^\s*(Medidas|Material|Detalles):\s*$/i.test(l)).join("\n").trim();
+
+function aplicarDeteccion(){
+  const f = $("#formProducto"); const d = detectar(f.nombre.value);
+  for(const k of ["categoria","marca","talla","color"]){
+    const el = f[k]; if(el.dataset.manual === "1") continue;
+    if(k === "categoria"){
+      const v = d.categoria || "";
+      if(v && ![...el.options].some(o => o.value === v)) el.insertAdjacentHTML("beforeend", `<option>${esc(v)}</option>`);
+      el.value = v;
+    } else el.value = d[k] || "";
+  }
+  const partes = [];
+  if(f.categoria.value) partes.push(`Categoría <b>${esc(f.categoria.value)}</b>`);
+  if(f.marca.value) partes.push(`Marca <b>${esc(f.marca.value)}</b>`);
+  if(f.talla.value) partes.push(`Talla <b>${esc(f.talla.value)}</b>`);
+  if(f.color.value) partes.push(`Color <b>${esc(f.color.value)}</b>`);
+  $("#detectado").innerHTML = f.nombre.value.trim()
+    ? (partes.length ? "Detectado: " + partes.join(" · ") + ' · <a href="#" id="lnkCorregir">corregir</a>' : 'Usa el formato <b>Tipo Marca Color talla X</b> para que se clasifique solo.')
+    : "";
+  const l = $("#lnkCorregir"); if(l) l.onclick = e => { e.preventDefault(); $("#masDetalles").open = true; };
+}
+
+/* ---------- editor ---------- */
+let fotosOriginales = [];
+function abrirEditor(id){
+  const f = $("#formProducto"); f.reset();
+  const existente = id ? S.datos.productos.find(x => x.id === id) : null;
+  const ultimo = S.datos.productos[S.datos.productos.length-1];
+  S.editando = existente ? structuredClone(existente) : {
+    id: nuevoId(), nombre:"", categoria: "", marca:"", talla:"",
+    precio: null, precioAnterior:null, condicion:"Muy bueno", estado:"disponible", descripcion:"", fotos:[],
+    creado: new Date().toISOString(), color:"", genero: (ultimo && ultimo.genero) || "", destacado:false, actualizado: new Date().toISOString()
+  };
+  S.editando._nuevo = !existente;
+  fotosOriginales = [...S.editando.fotos];
+  const p = S.editando;
+  f.categoria.innerHTML = `<option value="">(sin detectar → Otros)</option>` + S.datos.categorias.map(c=>`<option>${esc(c)}</option>`).join("") +
+    (p.categoria && !S.datos.categorias.includes(p.categoria) ? `<option>${esc(p.categoria)}</option>` : "");
+  for(const k of ["nombre","categoria","marca","talla","precio","precioAnterior","condicion","estado","descripcion","color","genero"]){
+    f[k].value = p[k] ?? "";
+  }
+  f.destacado.checked = !!p.destacado;
+  // en productos existentes, lo que ya está guardado se respeta (no se re-detecta)
+  for(const k of ["categoria","marca","talla","color"]) f[k].dataset.manual = existente && p[k] ? "1" : "0";
+  $("#masDetalles").open = false;
+  aplicarDeteccion();
+  $("#dlgProductoTitulo").textContent = existente ? "Editar producto" : "Nuevo producto";
+  $("#btnEliminarDesdeEditor").classList.toggle("hidden", !existente);
+  $("#btnGuardarOtro").classList.toggle("hidden", !!existente);
+  renderFotosEditor();
+  $("#dlgProducto").showModal();
+  if(!existente) setTimeout(()=>f.nombre.focus(), 50);
+}
+window.abrirEditor = abrirEditor;
+
+function renderFotosEditor(){
+  const p = S.editando; const el = $("#fotosEditor");
+  el.innerHTML = p.fotos.map((r,i)=>`<div class="foto ${i===0?"portada":""}" data-i="${i}">
+      <img src="${esc(urlFoto(r))}" alt="">
+      ${i===0?'<span class="lbl">Portada</span>':""}
+      <div class="ctl">
+        <button type="button" data-f="izq" title="Mover a la izquierda" ${i===0?"disabled style='visibility:hidden'":""}>◀</button>
+        <button type="button" data-f="del" title="Quitar foto">✕</button>
+        <button type="button" data-f="der" title="Mover a la derecha" ${i===p.fotos.length-1?"disabled style='visibility:hidden'":""}>▶</button>
+      </div></div>`).join("") +
+    `<label class="addfoto" for="inputFotos">＋<br>Agregar fotos</label>`;
+}
+$("#fotosEditor").addEventListener("click", e => {
+  const b = e.target.closest("[data-f]"); if(!b) return;
+  const i = +b.closest(".foto").dataset.i; const a = S.editando.fotos;
+  if(b.dataset.f === "del"){ const [r] = a.splice(i,1); if(S.fotosNuevas.has(r) && !fotosOriginales.includes(r)){ S.fotosNuevas.delete(r); idb.del(r); } }
+  if(b.dataset.f === "izq" && i>0) [a[i-1],a[i]] = [a[i],a[i-1]];
+  if(b.dataset.f === "der" && i<a.length-1) [a[i+1],a[i]] = [a[i],a[i+1]];
+  renderFotosEditor();
+});
+$("#inputFotos").addEventListener("change", async e => { const fs = [...e.target.files]; e.target.value = ""; await agregarFotos(fs); });
+$("#formProducto").nombre.addEventListener("input", aplicarDeteccion);
+$("#formProducto").querySelectorAll("[data-auto]").forEach(el => el.addEventListener("input", () => { el.dataset.manual = el.value ? "1" : "0"; aplicarDeteccion(); }));
+$("#btnPlantilla").addEventListener("click", () => {
+  const ta = $("#formProducto").descripcion;
+  ta.value = ta.value.trim() ? ta.value.trimEnd() + "\n\n" + PLANTILLA : PLANTILLA;
+  ta.focus(); const i = ta.value.indexOf("Medidas: ") + 9; ta.setSelectionRange(i, i);
+});
+// arrastrar y soltar fotos sobre el editor
+$("#dlgProducto").addEventListener("dragover", e => { if(e.dataTransfer?.types?.includes("Files")) e.preventDefault(); });
+$("#dlgProducto").addEventListener("drop", e => { if(e.dataTransfer?.files?.length){ e.preventDefault(); agregarFotos([...e.dataTransfer.files]); } });
+
+function leerFormulario(){
+  const f = $("#formProducto"), p = S.editando;
+  const nombre = f.nombre.value.trim();
+  const precio = f.precio.value === "" ? NaN : Math.round(Number(f.precio.value));
+  if(!nombre){ toast("Falta el nombre.", true); f.nombre.focus(); return null; }
+  if(isNaN(precio) || precio < 0){ toast("Revisa el precio.", true); f.precio.focus(); return null; }
+  const pa = f.precioAnterior.value === "" ? null : Math.round(Number(f.precioAnterior.value));
+  Object.assign(p, {
+    nombre, categoria: f.categoria.value || "Otros", marca: normalizarMarca(f.marca.value), talla: f.talla.value.trim(),
+    precio, precioAnterior: pa && pa > 0 ? pa : null, condicion: f.condicion.value, estado: f.estado.value,
+    descripcion: limpiarPlantilla(f.descripcion.value), color: f.color.value.trim(), genero: f.genero.value,
+    destacado: f.destacado.checked, actualizado: new Date().toISOString()
+  });
+  return p;
+}
+function guardarEditor(){
+  const p = leerFormulario(); if(!p) return false;
+  const nuevo = p._nuevo; delete p._nuevo;
+  if(!S.datos.categorias.includes(p.categoria)) S.datos.categorias.push(p.categoria);
+  // fotos que estaban publicadas y se quitaron → borrar del repo al publicar
+  fotosOriginales.filter(r => !p.fotos.includes(r)).forEach(quitarFoto);
+  const i = S.datos.productos.findIndex(x => x.id === p.id);
+  if(i >= 0) S.datos.productos[i] = p; else S.datos.productos.push(p);
+  S.editando = null; cambio();
+  toast(nuevo ? "Producto agregado." : "Cambios guardados.");
+  return true;
+}
+function cancelarEditor(){
+  const p = S.editando;
+  if(p){ // descartar fotos subidas en esta sesión de edición
+    p.fotos.filter(r => !fotosOriginales.includes(r) && S.fotosNuevas.has(r)).forEach(r => { S.fotosNuevas.delete(r); idb.del(r); });
+  }
+  S.editando = null; $("#dlgProducto").close(); guardarBorrador();
+}
+$("#formProducto").addEventListener("submit", e => { e.preventDefault(); if(guardarEditor()) $("#dlgProducto").close(); });
+$("#btnGuardarOtro").addEventListener("click", () => {
+  if(guardarEditor()){ $("#dlgProducto").close(); abrirEditor(); }
+});
+$("#btnEliminarDesdeEditor").addEventListener("click", async () => {
+  const id = S.editando.id; const backup = S.editando;
+  $("#dlgProducto").close();
+  if(!(await eliminarProducto(id))){ S.editando = backup; $("#dlgProducto").showModal(); }
+  else S.editando = null;
+});
+$("#dlgProducto").addEventListener("cancel", e => { e.preventDefault(); cancelarEditor(); });
+$("#dlgProducto").querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", cancelarEditor));
+
+/* ---------- ajustes ---------- */
+let categoriasTmp = [];
+function abrirAjustes(){
+  const f = $("#formAjustes"), t = S.datos.tienda;
+  f.t_nombre.value = t.nombre||""; f.t_moneda.value = t.moneda||"CLP"; f.t_descripcion.value = t.descripcion||"";
+  f.t_whatsapp.value = t.whatsapp||""; f.t_instagram.value = t.instagram||"";
+  f.g_owner.value = S.cfg.owner||""; f.g_repo.value = S.cfg.repo||""; f.g_branch.value = S.cfg.branch||"main"; f.g_token.value = S.cfg.token||"";
+  categoriasTmp = [...S.datos.categorias]; renderCategorias();
+  $("#dlgAjustes").showModal();
+}
+function renderCategorias(){
+  $("#listaCategorias").innerHTML = categoriasTmp.map((c,i)=>{
+    const n = S.datos.productos.filter(p=>p.categoria===c).length;
+    return `<span class="chip">${esc(c)} <span class="hint">(${n})</span><button type="button" data-i="${i}" title="Quitar">×</button></span>`;
+  }).join("");
+}
+$("#listaCategorias").addEventListener("click", e => {
+  const b = e.target.closest("button[data-i]"); if(!b) return;
+  const c = categoriasTmp[+b.dataset.i];
+  if(S.datos.productos.some(p=>p.categoria===c)){ toast(`No puedes quitar "${c}": hay productos en esa categoría.`, true); return; }
+  categoriasTmp.splice(+b.dataset.i,1); renderCategorias();
+});
+function agregarCategoria(){
+  const i = $("#nuevaCategoria"); const v = i.value.trim().replace(/\s+/g," ");
+  if(!v) return;
+  if(categoriasTmp.some(c=>c.toLowerCase()===v.toLowerCase())){ toast("Esa categoría ya existe.", true); return; }
+  categoriasTmp.push(v[0].toUpperCase()+v.slice(1)); i.value = ""; renderCategorias();
+}
+$("#btnAgregarCategoria").addEventListener("click", agregarCategoria);
+$("#nuevaCategoria").addEventListener("keydown", e => { if(e.key==="Enter"){ e.preventDefault(); agregarCategoria(); } });
+$("#dlgAjustes").querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => $("#dlgAjustes").close()));
+$("#formAjustes").addEventListener("submit", async e => {
+  e.preventDefault();
+  const f = e.target;
+  Object.assign(S.datos.tienda, {
+    nombre: f.t_nombre.value.trim(), moneda: (f.t_moneda.value.trim()||"CLP").toUpperCase(), descripcion: f.t_descripcion.value.trim(),
+    whatsapp: f.t_whatsapp.value.replace(/\D/g,""), instagram: f.t_instagram.value.trim().replace(/^@/,"")
+  });
+  S.datos.categorias = categoriasTmp;
+  const nuevaCfg = { owner: f.g_owner.value.trim(), repo: f.g_repo.value.trim().replace(/\.git$/,""), branch: f.g_branch.value.trim()||"main", token: f.g_token.value.trim() };
+  const cfgCambio = JSON.stringify(nuevaCfg) !== JSON.stringify(S.cfg);
+  $("#dlgAjustes").close();
+  if(cfgCambio){
+    const datosLocales = S.datos;
+    S.cfg = nuevaCfg; ls.set("panel-gh", S.cfg);
+    await iniciar(datosLocales);
+  } else cambio();
+});
+$("#btnAjustes").addEventListener("click", abrirAjustes);
+
+/* exportar / importar */
+function descargar(nombre, texto){
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([texto],{type:"application/json"}));
+  a.download = nombre; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+const jsonFinal = () => { const d = { ...S.datos }; delete d.ejemplo; return JSON.stringify(d, null, 2) + "\n"; };
+$("#btnExportar").addEventListener("click", () => descargar(`productos-${new Date().toISOString().slice(0,10)}.json`, jsonFinal()));
+$("#btnImportar").addEventListener("click", () => $("#inputImportar").click());
+$("#inputImportar").addEventListener("change", async e => {
+  const file = e.target.files[0]; e.target.value = ""; if(!file) return;
+  try{
+    const d = normalizar(JSON.parse(await file.text()));
+    if(!(await confirmar("Importar respaldo", `Se reemplazarán los datos actuales por <b>${d.productos.length} productos</b> del archivo. Luego podrás publicarlos.`, "Importar"))) return;
+    S.datos = d; $("#dlgAjustes").close(); cambio(); toast("Respaldo importado.");
+  }catch{ toast("El archivo no es un JSON válido del catálogo.", true); }
+});
+
+/* ---------- publicar / descartar ---------- */
+function progreso(t){ $("#btnPublicar").textContent = t; }
+$("#btnPublicar").addEventListener("click", async () => {
+  if(!conGitHub()){ descargar("productos.json", jsonFinal()); toast("Descargado. Conecta GitHub en Ajustes para publicar directo."); return; }
+  if(S.publicando) return;
+  S.publicando = true; $("#btnPublicar").disabled = true; progreso("Revisando…");
+  try{
+    // ¿alguien publicó desde otro dispositivo mientras editabas?
+    const remoto = await cargarRemoto();
+    if(remoto.sha && S.remotoSha && remoto.sha !== S.remotoSha){
+      const ok = await confirmar("Hay una versión más nueva",
+        "El catálogo se modificó desde otro dispositivo después de que abriste este panel. Si publicas ahora, <b>tus cambios reemplazarán esa versión</b>.<br><br>Si no estás seguro, cancela, descarga un respaldo en Ajustes y recarga la página.",
+        "Publicar igualmente", true);
+      if(!ok) return;
+    }
+    S.datos.actualizado = new Date().toISOString();
+    const json = jsonFinal();
+    const n = contarCambios();
+    const sha = await publicarGitHub(json, `Catálogo: ${n} cambio${n===1?"":"s"} desde el panel`);
+    S.remotoSha = sha; S.publicado = JSON.stringify(S.datos);
+    for(const r of S.fotosNuevas.keys()) idb.del(r);
+    S.fotosNuevas.clear(); S.fotosBorrar.clear();
+    guardarBorrador();
+    toast("¡Publicado! El sitio se actualiza en 1–2 minutos.");
+  }catch(e){ console.error(e); toast(errorGitHub(e), true); }
+  finally{ S.publicando = false; render(); }
+});
+$("#btnDescartar").addEventListener("click", async () => {
+  if(!(await confirmar("Descartar cambios", "Se perderán todos los cambios que no has publicado.", "Descartar", true))) return;
+  for(const r of S.fotosNuevas.keys()) idb.del(r);
+  S.fotosNuevas.clear(); S.fotosBorrar.clear();
+  S.datos = normalizar(JSON.parse(S.publicado)); guardarBorrador(); render(); toast("Cambios descartados.");
+});
+window.addEventListener("beforeunload", e => { if(hayCambios() && conGitHub()){ e.preventDefault(); e.returnValue = ""; } });
+
+["q","fEstado","fCategoria","fOrden"].forEach(id => $("#"+id).addEventListener("input", render));
+$("#btnNuevo").addEventListener("click", () => abrirEditor());
+document.addEventListener("keydown", e => {
+  if(e.key === "n" && !e.ctrlKey && !e.metaKey && !document.querySelector("dialog[open]") && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)){ e.preventDefault(); abrirEditor(); }
+});
+
+/* ---------- inicio ---------- */
+async function iniciar(datosPrevios){
+  $("#subtitulo").textContent = "Cargando…";
+  if(await restaurarBorrador()){ render(); if(hayCambios()) toast("Recuperé tus cambios sin publicar."); }
+  if(conGitHub()){
+    try{
+      const r = await cargarRemoto();
+      const tieneBorrador = !!ls.get(claveBorrador()) && hayCambios();
+      if(r.datos){
+        const remotoStr = JSON.stringify(normalizar(r.datos));
+        if(!tieneBorrador || r.sha === S.remotoSha){
+          if(!tieneBorrador){ S.datos = normalizar(r.datos); }
+          S.publicado = remotoStr; S.remotoSha = r.sha;
+        } else {
+          // borrador basado en una versión antigua: conservar borrador, avisar
+          S.publicado = remotoStr; S.remotoSha = S.remotoSha || r.sha;
+          toast("Tienes cambios sin publicar hechos sobre una versión anterior del catálogo. Revísalos antes de publicar.", true);
+        }
+      } else {
+        // aún no existe productos.json en el repo: publicar lo que hay
+        if(!tieneBorrador){ S.datos = datosPrevios ? normalizar(datosPrevios) : DATOS_INICIALES(); }
+        S.publicado = ""; S.remotoSha = null;
+        toast("El repositorio aún no tiene catálogo. Publica para crearlo.");
+      }
+      guardarBorrador();
+      $("#subtitulo").textContent = "";
+    }catch(e){ console.error(e); toast(errorGitHub(e), true); }
+  } else if(!ls.get(claveBorrador())){
+    // modo prueba: intentar leer el JSON del mismo sitio
+    try{
+      const r = await fetch(RUTA_DATOS, {cache:"no-store"});
+      if(r.ok){ S.datos = normalizar(await r.json()); S.publicado = JSON.stringify(S.datos); }
+    }catch{}
+    if(datosPrevios) S.datos = normalizar(datosPrevios);
+    guardarBorrador();
+  }
+  render();
+}
+iniciar();
+</script>
+</body>
+</html>

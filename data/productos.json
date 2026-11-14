@@ -1,0 +1,79 @@
+{
+  "ejemplo": true,
+  "version": 1,
+  "actualizado": "2026-11-14T20:30:00Z",
+  "tienda": {
+    "nombre": "Mi tienda de segunda mano",
+    "descripcion": "Ropa de segunda mano en excelente estado",
+    "whatsapp": "",
+    "instagram": "",
+    "moneda": "CLP"
+  },
+  "categorias": [
+    "Camisetas",
+    "Tops",
+    "Pantalones",
+    "Faldas",
+    "Vestidos",
+    "Chaquetas",
+    "Polerones",
+    "Zapatos",
+    "Accesorios"
+  ],
+  "productos": [
+    {
+      "id": "p_ejemplo1",
+      "nombre": "Polera básica blanca",
+      "categoria": "Camisetas",
+      "marca": "Zara",
+      "talla": "M",
+      "precio": 5990,
+      "precioAnterior": 7990,
+      "condicion": "Muy bueno",
+      "estado": "disponible",
+      "descripcion": "Algodón 100%, sin manchas ni desgaste.",
+      "fotos": [],
+      "creado": "2026-11-14T20:30:00Z",
+      "color": "Blanco",
+      "genero": "Mujer",
+      "destacado": true,
+      "actualizado": "2026-11-14T20:30:00Z"
+    },
+    {
+      "id": "p_ejemplo2",
+      "nombre": "Jeans mom fit celeste",
+      "categoria": "Pantalones",
+      "marca": "Levi's",
+      "talla": "28",
+      "precio": 14990,
+      "precioAnterior": null,
+      "condicion": "Con detalles",
+      "estado": "disponible",
+      "descripcion": "Tiro alto. Pequeño detalle en el bolsillo trasero.",
+      "fotos": [],
+      "creado": "2026-11-14T20:31:00Z",
+      "color": "Celeste",
+      "genero": "Mujer",
+      "destacado": false,
+      "actualizado": "2026-11-14T20:31:00Z"
+    },
+    {
+      "id": "p_ejemplo3",
+      "nombre": "Chaqueta de mezclilla",
+      "categoria": "Chaquetas",
+      "marca": "H&M",
+      "talla": "L",
+      "precio": 19990,
+      "precioAnterior": null,
+      "condicion": "Como nuevo",
+      "estado": "vendido",
+      "descripcion": "",
+      "fotos": [],
+      "creado": "2026-11-14T20:32:00Z",
+      "color": "Azul",
+      "genero": "Hombre",
+      "destacado": false,
+      "actualizado": "2026-11-14T20:32:00Z"
+    }
+  ]
+}
