@@ -410,6 +410,21 @@ const idb = (() => {
 })();
 
 /* ---------- estado ---------- */
+// Si el panel está publicado en usuario.github.io/repositorio, usuario y repositorio se completan solos
+function sitioGitHub(){
+  const h = location.hostname.toLowerCase();
+  if(!h.endsWith(".github.io")) return null;
+  const owner = h.slice(0, -".github.io".length);
+  const seg = location.pathname.split("/").filter(Boolean)[0];
+  const repo = seg && !/\.html?$/i.test(seg) ? decodeURIComponent(seg) : h;
+  return { owner, repo };
+}
+function cfgInicial(){
+  const c = { owner:"", repo:"", branch:"main", token:"", ...(ls.get("panel-gh", {}) || {}) };
+  const g = sitioGitHub();
+  if(g){ if(!c.owner) c.owner = g.owner; if(!c.repo) c.repo = g.repo; }
+  return c;
+}
 const S = {
   datos: DATOS_INICIALES(),
   publicado: "",            // JSON de la última versión publicada/cargada
@@ -417,7 +432,7 @@ const S = {
   fotosNuevas: new Map(),   // ruta -> Blob (aún no subidas)
   fotosBorrar: new Set(),   // rutas en el repo a eliminar al publicar
   urls: new Map(),          // ruta -> objectURL
-  cfg: ls.get("panel-gh", {owner:"",repo:"",branch:"main",token:""}),
+  cfg: cfgInicial(),
   editando: null,           // copia del producto en edición
   publicando: false
 };
@@ -1056,6 +1071,8 @@ $("#formAjustes").addEventListener("submit", async e => {
   });
   S.datos.categorias = categoriasTmp;
   const nuevaCfg = { owner: f.g_owner.value.trim(), repo: f.g_repo.value.trim().replace(/\.git$/,""), branch: f.g_branch.value.trim()||"main", token: f.g_token.value.trim() };
+  if(nuevaCfg.token && (!nuevaCfg.owner || !nuevaCfg.repo)){ toast("Falta el usuario o el nombre del repositorio en la sección GitHub.", true); return; }
+  if(!nuevaCfg.token && nuevaCfg.owner && nuevaCfg.repo && f.g_token.value !== S.cfg.token) toast("Sin token el panel queda en modo prueba: pega tu token para publicar.", true);
   const cfgCambio = JSON.stringify(nuevaCfg) !== JSON.stringify(S.cfg);
   $("#dlgAjustes").close();
   if(cfgCambio){
@@ -1135,7 +1152,15 @@ async function iniciar(datosPrevios){
       if(r.datos){
         const remotoStr = JSON.stringify(normalizar(r.datos));
         if(!tieneBorrador || r.sha === S.remotoSha){
-          if(!tieneBorrador){ S.datos = normalizar(r.datos); }
+          if(!tieneBorrador){
+            S.datos = normalizar(r.datos);
+            // al conectar por primera vez, conservar los datos de tienda que se editaron en modo prueba
+            const tPrev = datosPrevios && datosPrevios.tienda;
+            if(tPrev && JSON.stringify(tPrev) !== JSON.stringify(S.datos.tienda) && JSON.stringify(tPrev) !== JSON.stringify(DATOS_INICIALES().tienda)){
+              const ini = DATOS_INICIALES().tienda;
+              for(const k of Object.keys(tPrev)) if(tPrev[k] && tPrev[k] !== ini[k]) S.datos.tienda[k] = tPrev[k];
+            }
+          }
           S.publicado = remotoStr; S.remotoSha = r.sha;
         } else {
           // borrador basado en una versión antigua: conservar borrador, avisar
@@ -1150,8 +1175,9 @@ async function iniciar(datosPrevios){
       }
       guardarBorrador();
       $("#subtitulo").textContent = "";
+      if(datosPrevios) toast(hayCambios() ? "Conectado. Tus datos de tienda quedaron como cambio: toca Publicar cambios." : "Conectado a GitHub. Ya puedes publicar.");
     }catch(e){ console.error(e); toast(errorGitHub(e), true); }
-  } else if(!ls.get(claveBorrador())){
+  } else if(!ls.get(claveBorrador()) || !hayCambios()){
     // modo prueba: intentar leer el JSON del mismo sitio
     try{
       const r = await fetch(RUTA_DATOS, {cache:"no-store"});
