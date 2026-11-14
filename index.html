@@ -284,6 +284,7 @@ footer { padding-block: 0 32px; color: var(--muted); font-size: 12px; }
     return '<div class="photo" style="' + bg + '">' + (src ? '<img src="' + esc(src) + '" alt="' + esc(p.nombre) + '" loading="lazy">' : garment(p)) + "</div>";
   }
   function sizeRank(s) { var i = SIZE_ORDER.indexOf(String(s).toUpperCase()); if (i >= 0) return i; var n = parseFloat(s); return isNaN(n) ? 999 : 100 + n; }
+  function isSale(p) { return typeof p.precio === "number" && typeof p.precioAnterior === "number" && p.precioAnterior > p.precio; }
   function isFav(id) { return favs.indexOf(id) >= 0; }
   function saveState() { try { sessionStorage.setItem("rc-filters", JSON.stringify(state)); } catch (e) {} }
 
@@ -379,8 +380,11 @@ footer { padding-block: 0 32px; color: var(--muted); font-size: 12px; }
       var r = (rank[a.estado] || 0) - (rank[b.estado] || 0);
       if (r) return r;
       if (state.sort === "nuevo" && !!a.destacado !== !!b.destacado) return a.destacado ? -1 : 1;
-      if (state.sort === "precio-asc") return (a.precio || 0) - (b.precio || 0);
-      if (state.sort === "precio-desc") return (b.precio || 0) - (a.precio || 0);
+      if (state.sort === "precio-asc" || state.sort === "precio-desc") {
+        var na = typeof a.precio !== "number", nb = typeof b.precio !== "number";
+        if (na || nb) return na === nb ? 0 : (na ? 1 : -1); // sin precio, al final
+        return state.sort === "precio-asc" ? a.precio - b.precio : b.precio - a.precio;
+      }
       if (state.sort === "marca") return String(a.marca).localeCompare(String(b.marca), "es");
       return String(b.creado || "").localeCompare(String(a.creado || ""));
     });
@@ -390,14 +394,14 @@ footer { padding-block: 0 32px; color: var(--muted); font-size: 12px; }
     var badge = "";
     if (p.estado === "vendido") badge = '<span class="badge vendido">Vendido</span>';
     else if (p.estado === "reservado") badge = '<span class="badge reservado">Reservado</span>';
-    else if (p.precioAnterior && p.precioAnterior > p.precio) badge = '<span class="badge oferta">Rebajado</span>';
+    else if (isSale(p)) badge = '<span class="badge oferta">Rebajado</span>';
     else if (p.destacado) badge = '<span class="badge destacado">Destacado</span>';
     var fav = isFav(p.id);
     return '<article class="card' + (p.estado === "vendido" ? " is-vendido" : "") + '">' +
       '<button type="button" class="card-open" data-open="' + esc(p.id) + '" aria-label="Ver ' + esc(p.nombre) + '" style="all:unset;cursor:pointer;display:contents">' +
       photoHtml(p) +
       '<div class="info"><span class="brand">' + esc(p.marca || "Sin marca") + '</span><span class="name">' + esc(p.nombre) + "</span>" +
-      '<div class="tagline"><span class="price">' + money(p.precio) + (p.precioAnterior && p.precioAnterior > p.precio ? "<s>" + money(p.precioAnterior) + "</s>" : "") + "</span>" +
+      '<div class="tagline"><span class="price">' + money(p.precio) + (isSale(p) ? "<s>" + money(p.precioAnterior) + "</s>" : "") + "</span>" +
       (p.talla ? '<span class="size">' + esc(p.talla) + "</span>" : "") + "</div></div></button>" +
       badge +
       '<button type="button" class="fav" data-fav="' + esc(p.id) + '" aria-pressed="' + fav + '" aria-label="' + (fav ? "Quitar de favoritos" : "Guardar en favoritos") + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/></svg></button>' +
@@ -457,7 +461,7 @@ footer { padding-block: 0 32px; color: var(--muted); font-size: 12px; }
       '<div class="gallery">' + photoHtml(p, photoIdx) + thumbs + "</div>" +
       '<div class="detail">' +
         '<div><span class="brand">' + esc(p.marca || "Sin marca") + '</span><h2 id="d-name">' + esc(p.nombre) + "</h2></div>" +
-        '<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><span class="price">' + money(p.precio) + (p.precioAnterior && p.precioAnterior > p.precio ? "<s>" + money(p.precioAnterior) + "</s>" : "") + '</span><span class="state ' + esc(st) + '"><i></i>' + esc(stLabel) + "</span></div>" +
+        '<div style="display:flex;align-items:baseline;gap:12px;flex-wrap:wrap"><span class="price">' + money(p.precio) + (isSale(p) ? "<s>" + money(p.precioAnterior) + "</s>" : "") + '</span><span class="state ' + esc(st) + '"><i></i>' + esc(stLabel) + "</span></div>" +
         '<dl class="specs"><dt>Prenda</dt><dd>' + esc(p.categoria || "-") + "</dd><dt>Talla</dt><dd>" + esc(p.talla || "-") + "</dd><dt>Estado</dt><dd>" + esc(p.condicion || "-") + "</dd>" +
         (p.color ? "<dt>Color</dt><dd>" + esc(p.color) + "</dd>" : "") + (p.genero ? "<dt>Para</dt><dd>" + esc(p.genero) + "</dd>" : "") + "</dl>" +
         (p.descripcion ? '<p class="desc">' + esc(p.descripcion) + "</p>" : "") +
