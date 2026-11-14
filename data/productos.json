@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "actualizado": "2026-11-14T22:02:31.629Z",
+  "actualizado": "2026-11-14T22:03:23.721Z",
   "tienda": {
     "nombre": "Cachudito Clóset Sale",
     "descripcion": "Ropa de segunda mano en excelente estado",
@@ -74,14 +74,14 @@
       "estado": "disponible",
       "descripcion": "",
       "fotos": [
-        "imagenes/p_dc0909bf4ltu-1.jpg",
-        "imagenes/p_dc0909bf4ltu-2.jpg"
+        "imagenes/p_dc0909bf4ltu-2.jpg",
+        "imagenes/p_dc0909bf4ltu-1.jpg"
       ],
       "creado": "2026-11-14T21:49:02Z",
       "color": "Rosa",
       "genero": "",
       "destacado": false,
-      "actualizado": "2026-11-14T21:49:02Z"
+      "actualizado": "2026-11-14T22:03:16.327Z"
     },
     {
       "id": "p_dc0909e96glg",
